@@ -2,7 +2,7 @@
 
 | Priority | Focus | Deliverable / exit criterion | Prototype status |
 |---|---|---|---|
-| **P0 — Fundamental course** | Improve lesson clarity, mobile layout, guided 3D motion and self-checks | Beginners can finish slip knot → foundation chain → single crochet → first rows without AI | Partial — eight steps, responsive layout, self-checks; knot/chain/motion lessons have phase playback, other lessons stay static illustrations, not physically accurate simulations |
+| **P0 — Fundamental course** | Improve lesson clarity, mobile layout, guided 3D motion and self-checks | Beginners can finish slip knot → foundation chain → single crochet → first rows without AI | Partial — eight steps, responsive layout, self-checks; lessons 2/4/5 have labeled phase playback with a handedness mirror, the other five stay static illustrations, and none claim physical accuracy |
 | **P1 — Progress & projects** | Better row/stitch correction, checkpoints, resumable project state, optional export | Users can leave mid-row and reliably recover their place | Partial — manual counts, undo, rows, pause/resume, journal; no named checkpoints or export |
 | **P2 — Camera assistance** | Angle/framing guide; test hand, hook and yarn tracking | Useful framing guidance across phone/laptop cameras | Partial — camera preview and optional hand landmarks; no hook or yarn tracking |
 | **P3 — Stitch recognition** | Label short videos; recognize foundation-chain phases; automate counting cautiously | Measure counting error, false corrections, latency on unseen users | Not started |
@@ -15,17 +15,15 @@
 
 “Precise” means correct loop topology, hook path, and phase timing — not photorealism.
 
-**Shipped:** lessons 2, 4, and 5 use a lesson-local timeline with play/pause, scrubber, phase buttons, 0.25×–1× speed, and front/top/side presets. The knot and chain lessons draw the ordered process phases; chain counting still follows the manual counter, not playback. Other lessons remain static illustrations.
+**Shipped:** lessons 2, 4, and 5 use a lesson-local timeline: play/pause, a scrubber whose 0–1000 travel maps onto a 6,000 ms playhead, previous/next phase buttons, 0.25×/0.5×/1× speed, front/top/side/free angle presets, and a right/left-handed mirror. The knot lesson labels five phases and the chain lessons four; each phase eases into a settle pose, the final frame holds for 800 ms, and then the loop repeats. Lesson 5 draws exactly its counted Vs up to 11 and above that draws the last 11 plus `Last 11 of N counted`; chain counting still follows the manual counter, not playback. Reduced motion starts paused. Other lessons remain static illustrations with no playback controls.
 
 Remaining work continues below.
 
-- Define a declarative stitch model: loop IDs, hook path, contact points, and phase boundaries for each lesson.
-- Drive the renderer from that model instead of per-scene drawing code.
-- Add a phase timeline: scrub, play/pause, 0.25× and 0.5× speed, step backward/forward.
-- Add front/top/side presets, active-loop highlighting, hook-path tracing, and tap/touch labels.
+- Extend the declarative stitch model to the remaining lessons (materials, grip, single crochet, swatch, fasten off) instead of per-scene drawing code.
+- Add active-loop highlighting, hook-path tracing, and tap/touch labels.
 - Add isolate controls for yarn, hook, and the working loop.
 - Keep Canvas 2D until the model abstraction and frame-time measurements justify WebGL or Three.js.
-- Acceptance: every lesson has named phase stops; the 11-chain practice shows the correct loop count; controls work with touch and keyboard; reduced-motion still communicates each phase; 60 fps desktop and 30 fps phone targets.
+- Acceptance: every lesson has named phase stops; every lesson's loop count is correct; controls work with touch and keyboard; reduced motion still communicates each phase; 60 fps desktop and 30 fps phone targets.
 
 ### 2. Add a camera setup guide (P2)
 
@@ -84,7 +82,7 @@ Track one bounded action first. Do not start with every stitch type.
 
 ## Next sprint checklist
 
-1. Build the phase-based stitch model and timeline controls for chain and single crochet.
+1. Extend the phase-based stitch model and timeline controls from the knot and chain lessons to the remaining lessons (single crochet, swatch, and the static scenes).
 2. Ship the camera setup guide with one-hint-at-a-time UX.
 3. Instrument overlay and inference performance before adding a model.
 4. Collect consented foundation-chain clips and label the defined phases.

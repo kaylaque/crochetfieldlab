@@ -20,7 +20,7 @@ Open `http://localhost:8000/`. For camera access from a phone, deploy over HTTPS
 ## What works today
 
 - **Guided course:** eight steps from tools and slip knot through foundation chain, single crochet, rows, and fastening off.
-- **Illustrative stitch view:** rotatable and zoomable canvas scenes drawn from 3D coordinates. Lessons 2, 4, and 5 use a lesson-local playback timeline (play/pause, scrubber, phase buttons, speed, angle presets) for the ordered knot/chain process; the other lessons stay explanatory static scenes. These are explanatory illustrations, not physically accurate crochet simulations or models generated from camera input.
+- **Illustrative stitch view:** rotatable and zoomable canvas scenes drawn from 3D coordinates. Lessons 2, 4, and 5 play a lesson-local stitch timeline with play/pause, a scrubber, previous/next phase buttons, 0.25×/0.5×/1× speed, front/top/side/free angle presets, and a right/left-handed mirror; the knot lesson has five named phases and the chain lessons four, each settling on its end pose before the next. The other five lessons stay explanatory static scenes and show no playback controls. These are explanatory illustrations, not physically accurate crochet simulations or models generated from camera input.
 - **Camera practice:** on-device preview with front/back switch, plus an opt-in MediaPipe Hand Landmarker overlay that reports whether hands are in frame. Model and WebAssembly assets load from an external CDN only when enabled.
 - **Manual tracking:** foundation-chain and single-crochet counters, undo, row number and next-row control, lesson check-offs, self-check and tips, and an activity journal.
 - **Persistence:** pause, resume, and automatic `localStorage` saves in the same browser profile. No cross-device sync.
@@ -103,7 +103,7 @@ Detailed phases and exit criteria: [`docs/ROADMAP.md`](docs/ROADMAP.md).
 
 | Order | Work | Done when |
 |---|---|---|
-| 1 | Make the stitch studio more precise and controllable | Lessons 2, 4, 5 have a named phase timeline with scrubber, phase steps, speed, and front/top/side presets; the remaining illustrated lessons stay static |
+| 1 | Make the stitch studio more precise and controllable | Lessons 2, 4, 5 have named phases with a scrubber, phase steps, speed, angle presets, and a handedness mirror; chain counts 0–11 draw exactly that many Vs and above 11 draw the last 11 plus `Last 11 of N counted`; the remaining five illustrated lessons stay static and expose no playback |
 | 2 | Add a camera **setup** guide, not a correctness judge | Step-specific framing, angle, distance, and lighting hints work on phone and laptop without nagging |
 | 3 | Prototype foundation-chain tracking | A phase-aware model proposes a count with confidence; the learner confirms, corrects, or ignores it |
 | 4 | Prove efficiency and precision | Measured count error, false corrections, override rate, latency, and device performance meet the gates in the roadmap |
@@ -118,6 +118,8 @@ Camera (getUserMedia) ───────► video panel
 
 Lesson manifest ─────► chapter-linked tutorial + illustrative stitch viewport
           └──────► next actions + manual self-check
+Playhead + speed + angle + handedness + manual count
+          └──────► stitch-motion.js pose sampling ─────► stitch-renderer.js ─────► Canvas 2D
 Manual counter ─────► localStorage ◄──── lesson navigation / pause
                                 └──────► history + resume
 
@@ -129,11 +131,15 @@ Browser agent ─────► document.modelContext ► webmcp.js ──► s
 - `index.html` — semantic layout
 - `styles.css` — design tokens and responsive UI; Google Fonts are optional
 - `app.js` — lesson content, progress, canvas stitch renderer, camera, optional hand landmarks
+- `stitch-motion.js` — keyframed knot and chain poses with pure sampling and mirroring (`window.StitchMotion`)
+- `stitch-renderer.js` — depth-ordered strand, hook, completed-V, and badge drawing into a 2D context (`window.StitchRenderer`)
 - `webmcp.js` — optional WebMCP tool definitions built on the same app actions
 - `vendor/webmcp-polyfill.js` — vendored W3C WebMCP polyfill 0.1.0 (Apache-2.0; license beside it)
 - `scripts/build-static.mjs` — copies browser assets into `dist/` for Workers
 - `wrangler.toml` — Cloudflare Workers static-assets configuration
-- `tests/test-smoke.cjs` — Node smoke test for navigation, counts, persistence, and journal
+- `tests/test-smoke.cjs` — Node smoke test for navigation, counts, persistence, playback, and journal
+- `tests/test-motion.cjs` — Node test for phase labels, interpolation, continuity, and mirroring
+- `tests/test-renderer.cjs` — Node test for drawn strands, completed Vs, overflow label, and in-buffer geometry
 - `docs/SPEC.md` — product concept, goals, core features, roadmap, and MVP scope
 - `docs/ARCHITECTURE.md` — current runtime and proposed computer-vision extension
 - `docs/ROADMAP.md` — phased roadmap with prototype status
@@ -163,7 +169,7 @@ The vendored polyfill is the package's standalone `dist/polyfill.js`. Replace th
 
 ## Deploy to Cloudflare Workers
 
-The site deploys as a static-assets-only Worker. `npm run build` copies `index.html`, `styles.css`, `app.js`, `webmcp.js`, and `vendor/` into `dist/`; `wrangler.toml` serves that directory.
+The site deploys as a static-assets-only Worker. `npm run build` copies `index.html`, `styles.css`, `app.js`, `stitch-motion.js`, `stitch-renderer.js`, `webmcp.js`, and `vendor/` into `dist/`; `wrangler.toml` serves that directory.
 
 One-time local setup:
 
