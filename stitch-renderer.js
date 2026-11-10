@@ -120,10 +120,14 @@ function drawStrand(ctx, points, id, cam) {
   if (!samples) return;
   const width = 16 * cam.height / 420 * cam.zoom;
   const active = id === 'active';
-  strokePath(ctx, samples, COLORS.ink, width + Math.max(2.4 * cam.px, width * .24));
-  strokePath(ctx, samples.map(([x, y, z]) => [x, y - .045, z]), COLORS.yarnShade, width * .92, .85);
-  strokePath(ctx, samples, active ? COLORS.yarnLight : COLORS.yarn, width);
-  strokePath(ctx, samples, active ? 'rgba(255,255,255,.85)' : 'rgba(255,255,255,.6)', Math.max(1.4 * cam.px, width * .16));
+  // Project the centerline once and the shifted underside copy separately: both are
+  // 3D model points, so neither may reach the 2D path builder unprojected.
+  const center = samples.map(p => project(p, cam));
+  const underside = samples.map(([x, y, z]) => project([x, y - .045, z], cam));
+  strokePath(ctx, center, COLORS.ink, width + Math.max(2.4 * cam.px, width * .24));
+  strokePath(ctx, underside, COLORS.yarnShade, width * .92, .85);
+  strokePath(ctx, center, active ? COLORS.yarnLight : COLORS.yarn, width);
+  strokePath(ctx, center, active ? 'rgba(255,255,255,.85)' : 'rgba(255,255,255,.6)', Math.max(1.4 * cam.px, width * .16));
 }
 
 // Hook metal stays blue; yarn never borrows that hue.
