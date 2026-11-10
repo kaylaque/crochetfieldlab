@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#f8f6f0" />
+  <meta name="description" content="Crochet Field Lab — camera-assisted beginner crochet practice with an interactive stitch guide, progress tracking and resume." />
+  <title>Crochet Field Lab — Learn one stitch at a time</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <a class="brand" href="#home" aria-label="Crochet Field Lab home">
+        <span class="brand-icon" aria-hidden="true"><svg viewBox="0 0 42 42"><path d="M9 13c10-15 27 0 17 9-7 6-22 5-18 13 5 9 24-3 25-12" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round"/><path d="m27 7 7 6" stroke="currentColor" stroke-width="3.2" stroke-linecap="round"/></svg></span>
+        <span>CROCHET<span class="brand-second">/FIELD LAB</span></span>
+      </a>
+      <span class="topbar-tag">STITCH BY STITCH · 001</span>
+      <nav class="top-nav" aria-label="Primary">
+        <button class="nav-link active" data-view="learn" type="button">Learn</button>
+        <button class="nav-link" data-view="journal" type="button">My journal</button>
+        <button class="nav-link about-trigger" id="aboutButton" type="button">About <span aria-hidden="true">↗</span></button>
+      </nav>
+    </header>
+
+    <div class="lesson-ribbon">
+      <div class="ribbon-heading">
+        <div class="eyebrow">YOUR FIRST STITCHES <span class="tiny-divider">/</span> BEGINNER COURSE</div>
+        <h1>Let's make something <em>lovely.</em></h1>
+      </div>
+      <div class="ribbon-progress">
+        <div class="progress-numbers"><span id="ribbonProgressLabel">01 / 08</span><span id="percentLabel">0% completed</span></div>
+        <div class="progress-track" role="progressbar" aria-label="Course completion" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="courseProgress"><div id="progressFill"></div></div>
+        <div class="ribbon-actions"><span id="saveStatus">Saved on this device</span><button id="pauseButton" class="button quiet small" type="button">Ⅱ Pause session</button></div>
+      </div>
+    </div>
+
+    <main class="workspace" id="learnView">
+      <aside class="lesson-sidebar" aria-label="Course steps">
+        <div class="panel-header"><span>01 — THE BASICS</span><span id="stepCompletedText">0/8 DONE</span></div>
+        <div class="sidebar-description">A gentle little journey from loose yarn to your first row.</div>
+        <ol class="step-list" id="stepList"></ol>
+        <div class="sidebar-footer">
+          <span class="mini-spark">✳</span>
+          <div><strong>Go at your own pace.</strong><p>Take breaks. Make mistakes. Come back whenever.</p></div>
+        </div>
+      </aside>
+
+      <section class="learning-center" aria-label="Lesson and 3D preview">
+        <div class="lesson-card-header">
+          <div>
+            <span class="eyebrow" id="stepEyebrow">STEP 01 / 08 · PREPARE</span>
+            <h2 id="stepTitle">Meet your tools.</h2>
+            <p id="stepDescription">You only need a hook, yarn, and a little curiosity.</p>
+          </div>
+          <div class="lesson-chapter" id="chapterNumber">01</div>
+        </div>
+        <div class="viewer" id="viewer">
+          <div class="viewer-toolbar">
+            <span class="scene-label"><span class="status-dot"></span> INTERACTIVE STITCH MODEL</span>
+            <div class="viewer-tools">
+              <button type="button" id="viewerPlayButton" class="chip-button" aria-label="Pause animation" title="Pause animation">Ⅱ</button>
+              <button type="button" id="viewerResetButton" class="chip-button" title="Reset 3D angle">⟲</button>
+              <span class="viewer-badge">3D</span>
+            </div>
+          </div>
+          <canvas id="stitchCanvas" aria-label="Rotatable illustrated 3D crochet model showing the current technique" tabindex="0"></canvas>
+          <div class="viewer-center-label" id="modelLabel">YARN + HOOK</div>
+          <div class="viewer-bottom"><span>↻ DRAG TO ROTATE</span><span>SCROLL / PINCH TO ZOOM</span></div>
+        </div>
+        <div class="instruction-bar">
+          <div class="instruction-icon" aria-hidden="true">↳</div>
+          <div class="instruction-copy"><span class="eyebrow">YOUR NEXT MOVE</span><strong id="instructionText">Gather a hook and some yarn.</strong><p id="instructionHint">No fancy kit needed.</p></div>
+        </div>
+        <div class="counting-panel" id="countingPanel" hidden>
+          <div><span class="eyebrow" id="counterHeading">FOUNDATION CHAIN</span><div class="count-main"><strong id="countValue">0</strong><span> / <span id="countTarget">11</span> stitches</span></div><p id="rowIndicator">Row 0 · foundation chain</p></div>
+          <div class="counter-actions"><button class="count-control" id="decrementCount" type="button" aria-label="Remove one counted stitch">−</button><button class="count-control plus" id="incrementCount" type="button" aria-label="Count one completed stitch">+ <span>Stitch</span></button></div>
+        </div>
+        <div class="row-control" id="rowControl"><span>Working across a row? Track rows as you go.</span><button id="newRow" type="button">+ Next row ↗</button></div>
+        <div class="step-footer">
+          <button class="button outline" id="previousButton" type="button">← Previous</button>
+          <div class="footer-center" id="progressPrompt">Make a little progress at a time ♡</div>
+          <button class="button primary" id="nextButton" type="button">Mark done & continue →</button>
+        </div>
+      </section>
+
+      <aside class="practice-sidebar" aria-label="Live practice camera and guidance">
+        <div class="panel-header"><span>02 — YOUR PRACTICE SPACE</span><span class="label-live"><span></span> ON-DEVICE</span></div>
+        <h3>See your hands.</h3><p class="practice-intro">Set up your camera and follow along with the model.</p>
+        <div class="camera-box" id="cameraBox">
+          <video id="cameraVideo" autoplay muted playsinline></video>
+          <canvas id="handOverlay" aria-hidden="true"></canvas>
+          <div id="cameraPlaceholder" class="camera-placeholder"><div class="camera-glyph">◎</div><strong>Camera is off</strong><span>Nothing is recorded or uploaded.</span></div>
+          <div class="camera-corners" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+          <span class="camera-live-pill" id="cameraLivePill" hidden>● LIVE CAMERA</span>
+        </div>
+        <div class="camera-actions"><button id="cameraButton" class="button dark" type="button">◎ Turn on camera</button><button id="flipCameraButton" class="button icon-only outline" title="Switch between front and back cameras" aria-label="Switch camera" type="button" disabled>⇄</button></div>
+        <div class="vision-card"><div class="vision-card-title"><span class="eyebrow">CAMERA ASSIST</span><span class="beta-label">BETA</span></div>
+          <p id="visionStatus" aria-live="polite">Enable your camera to check your framing. Stitch correctness still needs your confirmation.</p>
+          <button id="visionButton" class="underlined-button" type="button" disabled>Enable hand landmarks ↗</button>
+        </div>
+        <div class="review-card"><span class="eyebrow">CHECK YOUR WORK</span><p>Does your stitch look like the guide?</p><div class="review-actions"><button type="button" id="looksGood" class="review-good">✓ Looks good</button><button type="button" id="needHelp" class="review-help">? Need a tip</button></div><p id="reviewFeedback" class="review-feedback" aria-live="polite"></p></div>
+        <div class="tutorial-card"><span class="eyebrow">WATCH THE ORIGINAL TUTORIAL</span><h4>How to Crochet for Absolute Beginners: Part 1</h4><p>simplydaisy · Short chapter links</p><a id="videoLink" href="https://www.youtube.com/watch?v=aAxGTnVNJiE" target="_blank" rel="noopener noreferrer">Watch this lesson's moment ↗</a></div>
+      </aside>
+    </main>
+
+    <section class="journal-view" id="journalView" hidden aria-label="Progress journal">
+      <div class="journal-title"><span class="eyebrow">YOUR PRIVATE LITTLE JOURNAL</span><h2>Look how far you've come. <span>✳</span></h2><p>Saved in this browser only. No account or backend required.</p></div>
+      <div class="journal-stats"><article><span>COURSE PROGRESS</span><strong id="journalCompleted">0 / 8</strong><small>lessons finished</small></article><article><span>FOUNDATION CHAINS</span><strong id="journalChains">0</strong><small>manually counted stitches</small></article><article><span>SINGLE CROCHETS</span><strong id="journalSingles">0</strong><small>manually counted stitches</small></article><article><span>CURRENT PLACE</span><strong id="journalPlace">01</strong><small id="journalPlaceDetail">Materials & setup</small></article></div>
+      <div class="journal-history"><div class="panel-header"><span>ACTIVITY LOG</span><button type="button" id="clearHistory" class="underlined-button">Clear log</button></div><div id="historyList" class="history-list"></div></div>
+      <div class="journal-buttons"><button id="backToLesson" class="button primary" type="button">← Continue learning</button><button id="resetAll" class="button outline danger" type="button">Reset all progress</button></div>
+    </section>
+
+    <footer class="site-footer"><span>CROCHET / FIELD LAB — AN EXPERIMENT IN LEARNING BY MAKING</span><span>DEMO V1 · US CROCHET TERMS · PRIVATE BY DESIGN</span></footer>
+  </div>
+
+  <div id="pauseOverlay" class="modal-layer" hidden role="dialog" aria-modal="true" aria-labelledby="pauseHeading"><div class="modal-card"><div class="modal-symbol">✳</div><span class="eyebrow">SAVE YOUR PLACE</span><h2 id="pauseHeading">A little break is lovely, too.</h2><p>Your lesson, stitch totals, and journal are saved on this device. Your camera has been turned off.</p><div id="pauseSnapshot" class="pause-summary"></div><button class="button primary" id="resumeButton" type="button">Resume my stitches →</button><button class="underlined-button" id="pauseJournalButton" type="button">Review my journal</button></div></div>
+  <div id="aboutOverlay" class="modal-layer" hidden role="dialog" aria-modal="true" aria-labelledby="aboutHeading"><div class="modal-card"><button id="closeAbout" class="modal-close" type="button" aria-label="Close">×</button><span class="eyebrow">ABOUT THIS EXPERIMENT</span><h2 id="aboutHeading">Craft meets curiosity.</h2><p>This is a working front-end prototype: guided steps, a rotatable illustrative 3D model, a browser camera, optional hand landmark detection, and local progress.</p><p><strong>Not yet supported:</strong> automatic yarn/hook tracking, stitch correctness classification, automatic stitch counting, or physics-accurate crochet. Hand detection only evaluates whether hands are visible and approximately positioned.</p><p>The tutorial is linked to simplydaisy's original video, not copied or rehosted.</p><button class="button primary" id="aboutOkay" type="button">Got it →</button></div></div>
+  <script type="module" src="app.js"></script>
+</body>
+</html>
