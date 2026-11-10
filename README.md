@@ -1,39 +1,122 @@
-# Crochet Field Lab — browser-based crochet guide (prototype v1)
+# Crochet Field Lab 🧶
 
-A responsive, single-page beginner course based on the *topics and chapter links* in [simplydaisy's introductory crochet lesson](https://www.youtube.com/watch?v=aAxGTnVNJiE). No video footage, graphics, or source code from the reference websites is copied or rehosted.
+A browser-based beginner crochet course with guided steps, an illustrative 3D-coordinate stitch view, an on-device camera, optional hand landmarks, manual stitch tracking, and local progress. This repository is the working prototype for that idea — not a finished computer-vision tutor.
 
-## What runs now
+The prototype covers the first learning loop: follow a step, watch the stitch motion, practice in front of the camera, count your stitches, and keep your place. Automatic stitch recognition and AI correctness feedback remain research work.
 
-- Eight guided steps: materials → slip knot → holding hook/yarn → yarn over → 11 foundation chains → single crochet → rows → fastening off.
-- A rotatable, zoomable 3D-coordinate stitch illustration for each step. **Illustrative only**, not a physically accurate crochet simulation or 3D model generated from the camera.
-- On-device browser camera with front/back switch; requires HTTPS or localhost on modern browsers.
-- *Optional* MediaPipe Hand Landmarker overlay activated by the user. The model runs in the browser, uses up to two hands, and reports whether hands are in frame. Model and WebAssembly assets are fetched from an external CDN when activated. **No automatic stitch counting, correctness detection, hook position detection, or yarn tracking.** No camera upload or recording in this app.
-- Manual chain/single crochet counters, row number and next-row control, undo counts, lesson check-offs, self-check and tips, activity journal.
-- Optional WebMCP tool layer: eight page tools that let a browser agent read progress, open lessons, adjust counted stitches, finish rows, complete lessons, open the journal, and record a self-check. Tool calls reuse the same state functions as the buttons, so the visible UI updates immediately. (See [Optional WebMCP tools](#optional-webmcp-tools).)
-- Pause, resume and automatic persistence via `localStorage` in the **same browser/profile**. No sync between devices and not recoverable after local data is cleared.
-- Responsive layout, keyboard controls for 3D view (left/right), reduced-motion preference, chapter-level links to the source tutorial.
+## Quick start
+
+No build step is needed to preview the site:
+
+```bash
+python3 -m http.server 8000
+npm test
+```
+
+Open `http://localhost:8000/`. For camera access from a phone, deploy over HTTPS first; a plain `http://<LAN-IP>` page may be refused by the browser.
+
+## What works today
+
+- **Guided course:** eight steps from tools and slip knot through foundation chain, single crochet, rows, and fastening off.
+- **Illustrative stitch view:** rotatable and zoomable canvas scenes drawn from 3D coordinates. These are explanatory illustrations, not physically accurate crochet simulations or models generated from camera input.
+- **Camera practice:** on-device preview with front/back switch, plus an opt-in MediaPipe Hand Landmarker overlay that reports whether hands are in frame. Model and WebAssembly assets load from an external CDN only when enabled.
+- **Manual tracking:** foundation-chain and single-crochet counters, undo, row number and next-row control, lesson check-offs, self-check and tips, and an activity journal.
+- **Persistence:** pause, resume, and automatic `localStorage` saves in the same browser profile. No cross-device sync.
+- **Agent tools:** eight optional WebMCP tools over the same lesson actions. See [Optional WebMCP tools](#optional-webmcp-tools).
+- **Responsive UI:** phone layout, keyboard rotation for the stitch view, reduced-motion handling, and chapter links to the source tutorial.
+
+No automatic stitch counting, stitch-correctness detection, hook position detection, or yarn tracking exists.
+
+## Concept and goals
+
+The long-term product is a crochet companion that helps a beginner learn independently:
+
+- **Learn** fundamental techniques from step-by-step animated guidance.
+- **Practice** with a camera that observes real hand and hook movement.
+- **Get feedback** on stitch sequences, mistakes, and corrections.
+- **Track** stitches, rows, completed steps, and project history.
+- **Pause and resume** without losing the learner's place.
+
+Today the app delivers learning, manual tracking, and local resume. Camera hand framing is available; smart feedback is not.
+
+## Curriculum
+
+The course follows the topics and chapter links in [simplydaisy's introductory crochet lesson](https://www.youtube.com/watch?v=aAxGTnVNJiE):
+
+`00:23` materials · `00:53` slip knot · `01:15` holding hook · `01:52` chain · `03:35` single crochet · `07:02` weave in ends.
+
+The eight app steps and the 11-chain practice are an **app curriculum**, not a transcript of the video. No footage, graphics, or source code from the reference sites is copied or rehosted.
+
+US terminology: `ch` = chain, `sc` = single crochet. A *slip knot* is not a *slip stitch*. Double crochet (`dc`) is beyond the first course.
+
+## Technical exploration
+
+Proposed recognition pipeline:
+
+```mermaid
+flowchart LR
+  A[Camera] --> B[Hand tracking]
+  B --> C[Hook and yarn detection]
+  C --> D[Temporal stitch recognition]
+  D --> E[Feedback]
+  E --> F[Progress update]
+```
+
+| Technology | Purpose | In prototype |
+|---|---|---|
+| Three.js / WebGL | Interactive 3D crochet visualization | No — Canvas 2D projection of 3D coordinates |
+| MediaPipe Hands | Hand landmark tracking | Yes — optional, framing only |
+| Object detection / segmentation | Identify hook, yarn, and loops | No |
+| Temporal action recognition | Identify movements and completed stitches | No |
+| VLM / LLM | Context-aware mistake explanation | No — static lesson tips |
+| State machine | Validate order and manage progress | Partial — lesson and counter state; no action validation |
+| Browser storage / IndexedDB | Persist progress and history | Yes — `localStorage` only |
+
+**Research challenge:** accurate stitch recognition requires tracking small, frequently occluded yarn and hook movements over time. Hand landmarks alone cannot establish stitch correctness. A recognizer needs consented multi-angle clips, action-phase labels, hook/yarn tracking, temporal smoothing, an explicit *not sure* result, and evaluation on unseen learners. A low-confidence result must never silently advance a learner.
+
+## Roadmap and MVP
+
+| Phase | Focus | Prototype status |
+|---|---|---|
+| **P0 — Fundamental course** | Illustrations, beginner instructions, navigation, mobile UX | Started — eight steps and responsive UI |
+| **P1 — Progress tracking** | Counting, undo, checkpoints, pause/resume | Started — manual counts, rows, pause/resume, journal |
+| **P2 — Computer vision** | Calibration, hand tracking, hook/yarn detection | Partial — camera preview and optional hand landmarks |
+| **P3 — Stitch recognition** | Temporal recognition, automatic counting, error detection | Not started |
+| **P4 — AI tutor** | Personalized feedback, explanations, voice | Not started |
+| **P5 — Product expansion** | Pattern import, pattern-to-3D, amigurumi, community | Not started |
+
+MVP scope:
+
+1. **Deliver the beginner course:** functional guidance, camera preview, and persistent progress. The current prototype covers this with illustrative rather than physically accurate 3D.
+2. **Run one bounded CV experiment:** recognize foundation-chain movements and measure stitch-count accuracy across users, camera angles, and yarn types.
+3. **Keep the manual path primary** until recognition meets the evaluation bar above.
+
+## Architecture
+
+```
+Camera (getUserMedia) ───────► video panel
+              └─ opt-in hand landmarker (MediaPipe) ► hand landmark overlay
+
+Lesson manifest ─────► chapter-linked tutorial + illustrative stitch viewport
+          └──────► next actions + manual self-check
+Manual counter ─────► localStorage ◄──── lesson navigation / pause
+                                └──────► history + resume
+
+Browser agent ─────► document.modelContext ► webmcp.js ──► same actions + UI
+```
 
 ## Files
 
 - `index.html` — semantic layout
-- `styles.css` — design tokens, responsive UI; Google Fonts are optional
-- `app.js` — lesson content, progress, projection renderer, camera and optional hand detection
+- `styles.css` — design tokens and responsive UI; Google Fonts are optional
+- `app.js` — lesson content, progress, canvas stitch renderer, camera, optional hand landmarks
 - `webmcp.js` — optional WebMCP tool definitions built on the same app actions
 - `vendor/webmcp-polyfill.js` — vendored W3C WebMCP polyfill 0.1.0 (Apache-2.0; license beside it)
-- `scripts/build-static.mjs` — copies the browser files into `dist/` for Workers
+- `scripts/build-static.mjs` — copies browser assets into `dist/` for Workers
 - `wrangler.toml` — Cloudflare Workers static-assets configuration
-
-Previewing needs no build step or application server. The Cloudflare Worker serves a copy built by `npm run build`.
-
-## Preview
-
-Run a local static server from the directory:
-
-```bash
-python3 -m http.server 8000
-```
-
-Open `http://localhost:8000/`. For camera access from a phone, deploy to HTTPS first; a plain `http://<LAN-IP>` page may be refused by the browser.
+- `tests/test-smoke.cjs` — Node smoke test for navigation, counts, persistence, and journal
+- `docs/tests/` — browser E2E evidence for the UI and deployment changes
+- `.omp/skills/pr-e2e-evidence/` — repository-local E2E evidence workflow
 
 ## Optional WebMCP tools
 
@@ -76,8 +159,6 @@ npm run dev            # http://localhost:8787
 npm run deploy         # build and publish the Worker
 ```
 
-`npm test` runs the Node smoke test.
-
 ### Cloudflare Workers Builds
 
 Connect `kaylaque/crochetfieldlab` in the Cloudflare dashboard, then use these settings:
@@ -89,40 +170,28 @@ Connect `kaylaque/crochetfieldlab` in the Cloudflare dashboard, then use these s
 | Deploy command | `npx wrangler deploy` |
 | Root directory | `/` |
 
-The `cf-pages` branch mirrors `main` and exists only to gate deployments, so ordinary commits on `main` do not trigger a build. Push or fast-forward `cf-pages` when you want Cloudflare to deploy. The GitHub app authorizes the build; no Cloudflare token is stored in this repository. For a token-based runner instead, set `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` in that runner's secrets.
+`cf-pages` gates deployments, so ordinary commits on `main` do not trigger a build. Keep it current with `main` before deploying, then push `cf-pages`. The GitHub app authorizes the build; no Cloudflare token is stored in this repository. For a token-based runner instead, set `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` in that runner's secrets.
 
-## Scope and architecture
+For a manual rebuild, create a Deploy Hook for `cf-pages` under **Settings → Builds → Deploy Hooks** and POST to its URL.
 
-```
-Camera (getUserMedia) ───────► video panel
-              └─ opt-in hand landmarker (MediaPipe) ► hand landmark overlay
+## References
 
-Lesson manifest ─────► chapter-linked tutorial + illustrative 3D viewport
-          └──────► next actions + manual self-check
-Manual counter ─────► localStorage ◄──── lesson navigation / pause
-                                └──────► history + resume
+| Reference | Inspiration |
+|---|---|
+| [ESP32 Field Lab](https://ardchain.github.io/esp32-field-lab/) | Guided-learning UX, step navigation, visual controls |
+| [Garis Tepi Cangkang](https://bsw.kadcom.dev/trik/garis-tepi-cangkang/) | Stylized outline rendering and visual design direction |
+| [Beginner crochet tutorial](https://youtu.be/aAxGTnVNJiE) | Course topics, sequence, and chapter timestamps |
+| [CrochetPARADE](https://crochetparade.org/) | Procedural crochet modeling and stitch animation — future work |
+| [Yarnify3D](https://yarnify3d.com/) | Live 3D pattern preview — future work |
+| [Crochet Slicer](https://nordiclayerlab.se/) | Model-to-pattern conversion — future work |
 
-Browser agent ─────► document.modelContext ► webmcp.js ──► same actions + UI
-```
-
-### For a real computer-vision stitch tutor (future work)
-
-1. Collect consented, labeled multi-angle user clips. Class definitions should describe *action phase*, not just stitch name: hook insert → yarn over → pull up loop → yarn over → pull through two, with negatives (wrong insertion point, dropped loop, stitch too tight, hand occlusion).
-2. Add yarn/hook detection and tracking (segmentation + tool tip pose), alongside the hand landmarks. Hands alone cannot identify a correct stitch.
-3. Add short-video phase classification and temporal smoothing: a finite-state action recognizer with uncertainty and an explicit *not sure* output. A low-confidence result must never silently advance a learner.
-4. Evaluate on unseen learners, yarn colors, hook styles, camera angles, handedness, and lighting. Report phase F1, false-correction rate, manual override rate, latency, and on-device performance.
-5. Add opt-in still-image/VLM feedback for confusing steps, with disclosure and retention controls if cloud processing is used. Keep the manual path always available.
-
-Source chapter timestamps:
-`00:23` materials, `00:53` slip knot, `01:15` holding hook, `01:52` chain, `03:35` single crochet, `07:02` weave in ends. Substeps and the 11-chain practice are an **app curriculum**, not a transcript of the video.
-
-US terminology: `ch` = chain, `sc` = single crochet. A *slip knot* is not a *slip stitch*. Double crochet (`dc`) is beyond the first course.
+These links are references, not assets. This prototype is an original implementation.
 
 ## Privacy and limitations
 
-- Video is displayed locally by the browser's camera API. The app does not send frames to a server.
-- Enabling optional hand tracking fetches JavaScript, WebAssembly and model weights from external hosts (jsDelivr / Google Storage). Browser privacy practices still apply to those resource requests.
-- Progress is stored only locally and is subject to browser storage policies, deletion, private browsing, and device changes.
-- The WebMCP tools expose lesson progress, stitch counts, and journal entries to the agent the browser provides. They do not expose video, camera controls, or anything from `getUserMedia`, and they make no network requests.
-- A person can manually mark a lesson completed without mastering it; the interface deliberately avoids presenting an unsupported AI correctness score.
-- The visuals are original procedural illustrations, not a copy of CrochetPARADE or the linked web design references.
+- Video is displayed locally through the browser camera API. The app does not upload or record frames.
+- Enabling optional hand tracking fetches JavaScript, WebAssembly, and model weights from jsDelivr and Google Storage. Browser privacy practices apply to those requests.
+- Progress is stored only in `localStorage` and is subject to browser storage policies, deletion, private browsing, and device changes.
+- The WebMCP tools expose lesson progress, stitch counts, and journal entries to the agent the browser provides. They do not expose video, camera controls, or `getUserMedia`, and they make no network requests.
+- A learner can mark a lesson complete without mastering it; the interface does not present an unsupported automatic correctness score.
+- The stitch visuals are original procedural illustrations, not a copy of CrochetPARADE or the linked design references.
