@@ -131,11 +131,17 @@ function drawStrand(ctx, points, id, cam) {
 }
 
 // Hook metal stays blue; yarn never borrows that hue.
-function drawHook(ctx, hook, cam) {
+// The local hook shape is asymmetric (handle at negative local x, curl at positive x),
+// so mirror mode must reflect local x before rotating: rotating the unreflected shape
+// would keep the handle and curl on their original sides and only flip the throat.
+function drawHook(ctx, hook, cam, mirror) {
   const scale = clamp(finite(hook.scale, .7), .2, 2);
   const angle = finite(hook.angle, -.2);
   const cos = Math.cos(angle), sin = Math.sin(angle);
-  const at = (lx, ly) => [hook.x + lx * cos - ly * sin, hook.y + lx * sin + ly * cos, .4];
+  const at = (lx, ly) => {
+    const mx = mirror ? -lx : lx;
+    return [hook.x + mx * cos - ly * sin, hook.y + mx * sin + ly * cos, .4];
+  };
   const shaft = spline(curve(30, t => at((-1.7 + 2.6 * t) * scale, (.12 + t * .12) * scale)));
   const tip = spline(curve(24, t => at((.9 + .11 * Math.sin(Math.PI * t) + .20 * t) * scale, (.23 + .25 * Math.sin(Math.PI * t) - .19 * t) * scale)));
   if (!shaft || !tip) return;
@@ -179,13 +185,14 @@ function drawOverflowLabel(ctx, cam, counted) {
 function render(ctx, o) {
   if (!ctx || !o || !o.motion) return { phaseIndex: 0, visibleCompletedVs: 0 };
   const sampled = window.StitchMotion.sampleMotion(o.motion, o.playheadMs);
-  const pose = o.mirror ? window.StitchMotion.mirrorPose(sampled.pose) : sampled.pose;
+  const mirror = !!o.mirror;
+  const pose = mirror ? window.StitchMotion.mirrorPose(sampled.pose) : sampled.pose;
   const cam = camera(o);
   const counted = Math.max(0, Math.floor(finite(o.completedCount, 0)));
   drawStage(ctx, cam.width, cam.height);
   drawCompletedChains(ctx, counted, cam);
   for (const id of pose.order) drawStrand(ctx, pose.paths[id], id, cam);
-  drawHook(ctx, pose.hook, cam);
+  drawHook(ctx, pose.hook, cam, mirror);
   drawBadge(ctx, cam.width, cam.height);
   if (counted > MAX_VISIBLE_VS) drawOverflowLabel(ctx, cam, counted);
   return { phaseIndex: sampled.phaseIndex, visibleCompletedVs: Math.min(counted, MAX_VISIBLE_VS) };

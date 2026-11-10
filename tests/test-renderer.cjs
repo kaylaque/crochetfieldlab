@@ -51,6 +51,29 @@ assert.deepEqual(mirrored.snapshot.map(s=>s.points.length),plain.snapshot.map(s=
 assert.notDeepEqual(mirrored.snapshot,plain.snapshot,'mirrored geometry must differ from unmirrored geometry');
 assert.notDeepEqual(yarnPoints(mirrored.snapshot),plainYarn,'mirrored yarn geometry must differ from unmirrored yarn');
 
+// The hook's local shape is asymmetric (handle at negative local x, curl at positive),
+// so a true mirror must reflect that local x before rotation. Rotating the unreflected
+// shape instead leaves the handle and curl on their original sides and only flips the
+// throat. At yaw=0/pitch=0 projection is a symmetric x scale, so a genuinely reflected
+// hook is exactly the right-handed hook reflected about the canvas centre.
+const metalHook=snapshot=>snapshot.filter(s=>s.style==='#c9ddf5').map(s=>s.points);
+const flatRight=draw({completedCount:0,yaw:0,pitch:0,mirror:false});
+const flatLeft=draw({completedCount:0,yaw:0,pitch:0,mirror:true});
+const rightHook=metalHook(flatRight.snapshot),leftHook=metalHook(flatLeft.snapshot);
+assert.equal(leftHook.length,rightHook.length,'mirroring must not add or drop hook strokes');
+assert.ok(rightHook.length>=2,`expected hook shaft and tip strokes, got ${rightHook.length}`);
+assertInBuffer('flat right hook',flatRight.snapshot);
+assertInBuffer('flat left hook',flatLeft.snapshot);
+let hookDeviation=0;
+for(let i=0;i<rightHook.length;i++){
+  assert.equal(leftHook[i].length,rightHook[i].length,'mirroring must not resample hook strokes');
+  for(let j=0;j<rightHook[i].length;j++){
+    const [x,y]=rightHook[i][j],[mx,my]=leftHook[i][j];
+    hookDeviation=Math.max(hookDeviation,Math.abs(mx-(base.width-x)),Math.abs(my-y));
+  }
+}
+assert.ok(hookDeviation<1e-6,`mirrored hook must be a true reflection of the right-handed hook, worst deviation ${hookDeviation.toFixed(3)}px (handle/curl still on their original sides?)`);
+
 const zoomed=draw({completedCount:0,zoom:1.6});
 assertInBuffer('zoomed',zoomed.snapshot);
 assert.notDeepEqual(yarnPoints(zoomed.snapshot),plainYarn,'zoom must affect yarn geometry');
@@ -58,4 +81,4 @@ assert.notDeepEqual(yarnPoints(zoomed.snapshot),plainYarn,'zoom must affect yarn
 const tightened=draw({completedCount:0,playheadMs:0});
 assert.notDeepEqual(yarnPoints(tightened.snapshot),plainYarn,'playhead must affect yarn geometry');
 assert.ok(eleven.length>plain.snapshot.length,'completed Vs must add stroke geometry');
-console.log('PASS: completed Vs, overflow label, projected in-buffer yarn, mirroring, zoom.');
+console.log('PASS: completed Vs, overflow label, projected in-buffer yarn, mirroring, reflected hook, zoom.');
