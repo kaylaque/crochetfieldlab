@@ -39,6 +39,8 @@ The long-term product is a crochet companion that helps a beginner learn indepen
 
 Today the app delivers learning, manual tracking, and local resume. Camera hand framing is available; smart feedback is not.
 
+Full product specification: [`docs/SPEC.md`](docs/SPEC.md).
+
 ## Curriculum
 
 The course follows the topics and chapter links in [simplydaisy's introductory crochet lesson](https://www.youtube.com/watch?v=aAxGTnVNJiE):
@@ -115,6 +117,7 @@ Browser agent ─────► document.modelContext ► webmcp.js ──► s
 - `scripts/build-static.mjs` — copies browser assets into `dist/` for Workers
 - `wrangler.toml` — Cloudflare Workers static-assets configuration
 - `tests/test-smoke.cjs` — Node smoke test for navigation, counts, persistence, and journal
+- `docs/SPEC.md` — product concept, goals, core features, roadmap, and MVP scope
 - `docs/tests/` — browser E2E evidence for the UI and deployment changes
 - `.omp/skills/pr-e2e-evidence/` — repository-local E2E evidence workflow
 
