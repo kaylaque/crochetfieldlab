@@ -17,6 +17,8 @@ const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
 const finite = (value, fallback) => Number.isFinite(value) ? value : fallback;
 const curve = (steps, fn) => Array.from({ length: steps + 1 }, (_, i) => fn(i / steps));
 
+// `width` and `height` are the canvas drawing-buffer size in pixels; `dpr` describes
+// that buffer's pixel ratio so minimum stroke widths stay visible on dense displays.
 function camera(o) {
   return {
     yaw: finite(o.yaw, -.23),
@@ -97,9 +99,8 @@ function drawStage(ctx, w, h) {
 function drawCompletedChains(ctx, counted, cam) {
   if (!counted) return;
   const visible = Math.min(counted, MAX_VISIBLE_VS);
-  const spanX = 2.65, baseY = -.28, startX = -spanX / 2;
-  const stepX = visible > 1 ? spanX / (visible - 1) : 0;
-  const halfX = visible > 1 ? stepX / 2 : .22;
+  // Fixed stitch pitch keeps one V the same size as eleven; only the row's extent changes.
+  const stepX = .44, halfX = .22, baseY = -.28, startX = -(visible - 1) * stepX / 2;
   const width = 15 * cam.height / 420 * cam.zoom;
   const inkWidth = width + Math.max(2.4 * cam.px, width * .24);
   for (let i = 0; i < visible; i++) {
