@@ -99,6 +99,17 @@ MVP scope:
 
 Detailed phases and exit criteria: [`docs/ROADMAP.md`](docs/ROADMAP.md).
 
+### Closest next
+
+| Order | Work | Done when |
+|---|---|---|
+| 1 | Make the stitch studio more precise and controllable | Each lesson has a phase timeline, scrub/slow-motion, rotation presets, and a highlighted active loop/hook path |
+| 2 | Add a camera **setup** guide, not a correctness judge | Step-specific framing, angle, distance, and lighting hints work on phone and laptop without nagging |
+| 3 | Prototype foundation-chain tracking | A phase-aware model proposes a count with confidence; the learner confirms, corrects, or ignores it |
+| 4 | Prove efficiency and precision | Measured count error, false corrections, override rate, latency, and device performance meet the gates in the roadmap |
+
+The sequencing is deliberate: reliable framing and labeled motion data come before automatic counting. Manual controls stay available throughout.
+
 ## Architecture
 
 ```
