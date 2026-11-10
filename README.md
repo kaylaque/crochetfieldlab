@@ -20,8 +20,10 @@ A responsive, single-page beginner course based on the *topics and chapter links
 - `app.js` — lesson content, progress, projection renderer, camera and optional hand detection
 - `webmcp.js` — optional WebMCP tool definitions built on the same app actions
 - `vendor/webmcp-polyfill.js` — vendored W3C WebMCP polyfill 0.1.0 (Apache-2.0; license beside it)
+- `scripts/build-static.mjs` — copies the browser files into `dist/` for Workers
+- `wrangler.toml` — Cloudflare Workers static-assets configuration
 
-No build tooling or server application required.
+Previewing needs no build step or application server. The Cloudflare Worker serves a copy built by `npm run build`.
 
 ## Preview
 
@@ -54,13 +56,40 @@ Every tool reuses the button handlers, so the visible UI and `localStorage` stay
 
 The vendored polyfill is the package's standalone `dist/polyfill.js`. Replace that one file to update it, keeping `vendor/webmcp-polyfill.LICENSE` in sync.
 
-## Publish to GitHub Pages
+## Deploy to Cloudflare Workers
 
-This is a **standalone prototype**, not a direct edit of the reference site's repository. The requested ESP32 and design-reference pages were not retrievable from this environment, so this is a design interpretation rather than an extraction of their exact code or tokens.
+The site deploys as a static-assets-only Worker. `npm run build` copies `index.html`, `styles.css`, `app.js`, `webmcp.js`, and `vendor/` into `dist/`; `wrangler.toml` serves that directory.
 
-Option A — new Pages repository: put these three root files in a repository, configure **Settings → Pages → Deploy from branch** (`main` / root), then visit the Pages URL.
+One-time local setup:
 
-Option B — add as a route under a site you control: copy `index.html`, `styles.css`, `app.js` into a `crochet/` folder in your existing site and link to `/crochet/` (or `<site-base>/crochet/` if the project site has a path prefix). **Do not overwrite the existing ESP32 site.**
+```bash
+npm ci
+npx wrangler login
+```
+
+Build, inspect, and publish:
+
+```bash
+npm run build
+npm run deploy:dry     # validate config without publishing
+npm run dev            # http://localhost:8787
+npm run deploy         # build and publish the Worker
+```
+
+`npm test` runs the Node smoke test.
+
+### Cloudflare Workers Builds
+
+Connect `kaylaque/crochetfieldlab` in the Cloudflare dashboard, then use these settings:
+
+| Setting | Value |
+|---|---|
+| Production branch | `cf-deploy` |
+| Build command | `npm run build` |
+| Deploy command | `npx wrangler deploy` |
+| Root directory | `/` |
+
+The `cf-deploy` branch mirrors `main` and exists only to gate deployments, so ordinary commits on `main` do not trigger a build. Push or fast-forward `cf-deploy` when you want Cloudflare to deploy. The GitHub app authorizes the build; no Cloudflare token is stored in this repository. For a token-based runner instead, set `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` in that runner's secrets.
 
 ## Scope and architecture
 
