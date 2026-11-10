@@ -2,7 +2,7 @@
 
 | Priority | Focus | Deliverable / exit criterion | Prototype status |
 |---|---|---|---|
-| **P0 — Fundamental course** | Improve lesson clarity, mobile layout, guided 3D motion and self-checks | Beginners can finish slip knot → foundation chain → single crochet → first rows without AI | Started — eight steps, responsive layout, self-checks; illustrations are not physically accurate |
+| **P0 — Fundamental course** | Improve lesson clarity, mobile layout, guided 3D motion and self-checks | Beginners can finish slip knot → foundation chain → single crochet → first rows without AI | Partial — eight steps, responsive layout, self-checks; knot/chain/motion lessons have phase playback, other lessons stay static illustrations, not physically accurate simulations |
 | **P1 — Progress & projects** | Better row/stitch correction, checkpoints, resumable project state, optional export | Users can leave mid-row and reliably recover their place | Partial — manual counts, undo, rows, pause/resume, journal; no named checkpoints or export |
 | **P2 — Camera assistance** | Angle/framing guide; test hand, hook and yarn tracking | Useful framing guidance across phone/laptop cameras | Partial — camera preview and optional hand landmarks; no hook or yarn tracking |
 | **P3 — Stitch recognition** | Label short videos; recognize foundation-chain phases; automate counting cautiously | Measure counting error, false corrections, latency on unseen users | Not started |
@@ -14,6 +14,10 @@
 ### 1. Make the stitch studio precise and controllable (P0)
 
 “Precise” means correct loop topology, hook path, and phase timing — not photorealism.
+
+**Shipped:** lessons 2, 4, and 5 use a lesson-local timeline with play/pause, scrubber, phase buttons, 0.25×–1× speed, and front/top/side presets. The knot and chain lessons draw the ordered process phases; chain counting still follows the manual counter, not playback. Other lessons remain static illustrations.
+
+Remaining work continues below.
 
 - Define a declarative stitch model: loop IDs, hook path, contact points, and phase boundaries for each lesson.
 - Drive the renderer from that model instead of per-scene drawing code.

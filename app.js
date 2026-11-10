@@ -16,6 +16,8 @@ const blank = () => ({step:0,done:[],chains:0,singles:0,row:1,rowStitches:0,even
 function load(){try{const data=JSON.parse(localStorage.getItem(STORE)||'null');if(!data || typeof data!=='object') return blank();return {...blank(),...data,step:Math.max(0,Math.min(LESSONS.length-1,Number(data.step)||0)),done:Array.isArray(data.done)?data.done.filter(x=>Number.isInteger(x)&&x>=0&&x<LESSONS.length):[],events:Array.isArray(data.events)?data.events.slice(0,180):[]};}catch{return blank();}}
 let state=load();let view='learn';let cameraStream=null;let handLandmarker=null;let tracking=false;let trackingTimer=null;let facing='environment';let lastVideoTime=-1;
 let modelPlaying=!matchMedia('(prefers-reduced-motion: reduce)').matches;
+// Viewer-local lesson playback speed; never persisted.
+let speed=1;
 const two=n=>String(n).padStart(2,'0');
 function persist(){state.lastSaved=new Date().toISOString();try{localStorage.setItem(STORE,JSON.stringify(state));$('saveStatus').textContent='Saved on this device';}catch{$('saveStatus').textContent='Could not save: storage unavailable';}}
 function eventLog(title,detail=''){state.events.unshift({title,detail,at:new Date().toISOString()});state.events=state.events.slice(0,180);persist();}
@@ -37,8 +39,14 @@ function modal(id,open){$(id).hidden=!open;document.body.style.overflow=open?'hi
 function pause(){state.paused=true;eventLog('Session paused',`Step ${state.step+1}: ${LESSONS[state.step].short}`);stopCamera();$('pauseSnapshot').textContent=`CURRENT STEP ${two(state.step+1)} · ${LESSONS[state.step].short}\n${state.chains} chains · ${state.singles} single crochets · row ${state.row}`;modal('pauseOverlay',true);}
 function resume(){state.paused=false;eventLog('Session resumed',`Step ${state.step+1}: ${LESSONS[state.step].short}`);modal('pauseOverlay',false);setView('learn');}
 // 3D illustrations use animated 3D curves projected into Canvas 2D. These are explanatory, not stitch-physics simulations.
-const canvas=$('stitchCanvas'),g=canvas.getContext('2d');let yaw=-0.23,pitch=0.13,zoom=1,dragging=false,lastPointer=null,phase=0,lastFrame=0,activeScene='';
+const canvas=$('stitchCanvas'),g=canvas.getContext('2d');let yaw=-0.23,pitch=0.13,zoom=1,dragging=false,lastPointer=null,processProgress=0,lastFrame=0,activeScene='';const pointers=new Map();let pinchDistance=0;
 const C={outline:'#3b3355',pink:'#ec9cad',pinkLight:'#ffc8d0',metal:'#c9ddf5',metalHighlight:'#f1f7ff'};
+const REDUCED_MOTION=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const TIMELINE_MS=6000,TIMELINE_HOLD_MS=800,TIMELINE_TOTAL_MS=6800;
+const KNOT_PHASES=['Lay yarn','Cross to form a loop','Pull a bight through','Place loop on hook','Tighten the sliding knot'];
+const CHAIN_PHASES=['One loop on hook','Yarn over','Pull through','New chain V'];
+const ANIMATED_SCENES={knot:KNOT_PHASES,motion:CHAIN_PHASES,chain:CHAIN_PHASES};
+const ANGLE_PRESETS={front:[-0.23,0.13],top:[-0.23,-0.8],side:[Math.PI/2,0.13]};
 function P(x,y,z=0){return [x,y,z];}
 function transform(p){const [x,y,z]=p;const ax=x*Math.cos(yaw)-z*Math.sin(yaw),az=x*Math.sin(yaw)+z*Math.cos(yaw);const by=y*Math.cos(pitch)-az*Math.sin(pitch),bz=y*Math.sin(pitch)+az*Math.cos(pitch);return [ax,by,bz];}
 function proj(p){const [x,y,z]=transform(p),dist=8;const f=dist/(dist+z*0.18);const u=canvas.width/2+x*canvas.height*0.18*zoom*f,v=canvas.height*.51-y*canvas.height*.18*zoom*f;return [u,v];}
@@ -48,15 +56,100 @@ function ellipse(cx,cy,rx,ry,z=0,angle=0){return curve(t=>{const a=t*Math.PI*2;l
 function yarnBall(x,y,z,r=0.8){const sph=ellipse(x,y,r,r*.88,z);tube(sph,C.pinkLight,49*r,1);for(let j=0;j<9;j++){const a=-1.1+j*.33;const stroke=curve(t=>{const v=(t-.5)*2;return P(x+r*.85*v*Math.cos(a),y+r*.65*v*Math.sin(a)+.18*Math.sin(5*t+j),z-.2+.13*Math.cos(4*t+j));},30);tube(stroke,j%2?C.pink:C.pinkLight,3.6,0.84);}}
 function hook(x,y,s=1,angle=-.15){const tail=curve(t=>{let xx=x+(-1.7+2.6*t)*s,yy=y+(.12+(t*.12))*s;return P(xx*Math.cos(angle)-yy*Math.sin(angle),xx*Math.sin(angle)+yy*Math.cos(angle),.4);},36);tube(tail,C.metal,24*s);const tip=P((x+.9*s)*Math.cos(angle)-(y+.23*s)*Math.sin(angle),(x+.9*s)*Math.sin(angle)+(y+.23*s)*Math.cos(angle),.4);const hooktip=curve(t=>P(tip[0]+(.11*Math.sin(Math.PI*t)+.20*t)*s,tip[1]+(.25*Math.sin(Math.PI*t)-.19*t)*s,.4),25);tube(hooktip,C.metalHighlight,13*s);}
 function chains(n=7,y=-.2){for(let i=0;i<n;i++){const x=(i-(n-1)/2)*.52;const r=ellipse(x,y+(i%2)*.1,.35,.23,.1+(i%2)*.12,i%2?.3:-.3);tube(r,i%2?C.pinkLight:C.pink,15);}}
+function drawChainV(x,y,i=0,n=2){const angle=i%2?.3:-.3;const z=.1+(i%2)*.12;const first=curve(q=>P(x-.2+q*.2,y-.14+q*.26,z+.04*Math.sin(q*6)),18);tube(first,i%2?C.pinkLight:C.pink,15);const second=curve(q=>P(x+.0+q*.2,y+.12-q*.26,z+.05),18);tube(second,i%2?C.pink:C.pinkLight,15);}
+// Ordered knot process: default front-left yarn; working strand crosses, extends a bight through the loop, loop tightens around the bight on the hook.
+function drawKnotProcess(progress){
+  const normalized=Math.max(0,Math.min(1,progress/TIMELINE_MS));
+  const stages=5;
+  const span=normalized*stages;
+  const stage=Math.max(0,Math.min(stages,Math.floor(span)));
+  const frac=Math.max(0,Math.min(1,span-stage));
+  const eased=e=>1-Math.cos(Math.PI*.5*e);
+  // relative movement parameters
+  let crossZ=0,loopScale=0,bightY=0,slideX=0;
+  if(stage===0){crossZ=0;loopScale=0;bightY=0;}
+  else if(stage===1){crossZ=eased(frac);loopScale=.68*eased(frac);bightY=0;}
+  else if(stage===2){crossZ=1;loopScale=.68;bightY=.56*eased(frac);}
+  else if(stage===3){crossZ=1;loopScale=.68;bightY=.56;}
+  if(stage===4){crossZ=1;loopScale=.68;bightY=.56;slideX=eased(frac)*.32;}
+  else if(stage===5){crossZ=1;loopScale=.68;bightY=.56;slideX=.32;}
+  const xShift=slideX;
+  // Tail strand stays on the left, working strand on the right.
+  const tail=curve(q=>P(-2.15+q*.8,-.62+q*.66,.08),40);
+  tube(tail,C.pink,18);
+  const workRight=curve(q=>P(-.06+q*.62,-.1+q*.36,.07+crossZ*.16),40);
+  tube(workRight,C.pinkLight,18);
+  // The crossed first loop tightens as the bight is pulled through; the working strand crosses above the tail.
+  if(loopScale>0){
+    const loop=ellipse(-.56+xShift,-.05+xShift*.2,.62*loopScale+.22,.78*loopScale+.22,.1+crossZ*.22,-crossZ*1.5);
+    tube(loop,C.pinkLight,18);
+  }
+  // Bight rises through the loop and opens around the hook tip; tail and working strands remain distinct.
+  const bightStartX=-.06+xShift, bightStartY=-.02+xShift*.2;
+  const bight=curve(q=>{
+    const t=frac;
+    const yTop=bightY;
+    return P(bightStartX+q*(.54+.28*t),bightStartY+q*(yTop*.82-0.20),.16+crossZ*.24+q*.06);
+  },44);
+  tube(bight,C.metal,18);
+  // Working strand crossing over tail visible during the cross stage.
+  if(crossZ>0){
+    const cross=curve(q=>P(-1.05+q*.5,-.75+q*.18,.04+crossZ*.3),28);
+    tube(cross,C.metalHighlight,18);
+  }
+  hook(1.14,.08,.72,.34);
+}
+// Ordered chain process: one loop on hook, yarn over, pull through, and one new chain V.
+function drawChainProcess(progress,completedCount){
+  const normalized=Math.max(0,Math.min(1,progress/TIMELINE_MS));
+  const stages=4;
+  const span=normalized*stages;
+  const stage=Math.max(0,Math.min(stages,Math.floor(span)));
+  const frac=Math.max(0,Math.min(1,span-stage));
+  const eased=e=>1-Math.cos(Math.PI*.5*e);
+  // One stable loop is always on the hook.
+  const loop=ellipse(.09,.02,.4,.43,.11);tube(loop,C.pinkLight,17);
+  // Existing chain uses actual manual counters, max 11 shown.
+  const shown=Math.min(completedCount,11);
+  const start=-1.35,spanX=2.65;
+  for(let i=0;i<shown;i++){
+    const idx=i;
+    const x=shown===1?(start+spanX*.22):start+(i/(shown-1))*spanX;
+    drawChainV(x,-.28,idx,shown);
+  }
+  // Animated next stitch is instructional only.
+  const animX=Math.min(.24+frac*.34,1.15);
+  //! instructional progress; does not update state.chains
+  drawChainV(animX,.03,shown,shown+1);
+  // Connected working strand from the previous V.
+  const working=curve(q=>P(-.35+q*(animX+.35),-.42+q*.42,.05+q*.08),34);
+  tube(working,C.pink,15);
+  if(stage>=1){
+    // Bight from the working strand rises over the hook.
+    const over=curve(q=>P(animX-.02+q*.4,.08-q*.2+.02*Math.sin(q*7),.16+q*.05),36);
+    tube(over,C.metal,17);
+  }
+  if(stage>=2){
+    // New bight pulled through the old loop.
+    const through=curve(q=>P(animX-.08+q*.46,-.02-q*.12,.1-q*.06),30);
+    tube(through,C.pinkLight,16);
+  }
+  hook(1.22,.05,.62,.3);
+  if(completedCount>11){
+    // Famous last 11 of N; manual counting is about learning, not limits.
+    const label=`Last 11 of ${completedCount} counted`;
+    g.save();g.fillStyle='rgba(87,74,124,.82)';g.font=`${Math.max(11,canvas.width*.014)}px ui-monospace,monospace`;g.textAlign='left';g.fillText(label,16,92);g.restore();
+  }
+}
 function coils(count=7,rows=2){for(let j=0;j<rows;j++)for(let i=0;i<count;i++){const x=(i-(count-1)/2)*.55,y=(j-(rows-1)/2)*.56;const e=ellipse(x,y,.38,.3,.16+(i%2)*.12,(i%2?1:-1)*.28);tube(e,(i+j)%2?C.pinkLight:C.pink,17);const v=curve(t=>P(x+.16*Math.cos(t*6),y-.2+t*.4,.31),20);tube(v,C.pink,9);}}
 function drawDiagram(){if(!g)return;const w=canvas.width,h=canvas.height;g.clearRect(0,0,w,h);const grd=g.createLinearGradient(0,0,w,h);grd.addColorStop(0,'#e6ecfb');grd.addColorStop(1,'#f6e8f1');g.fillStyle=grd;g.fillRect(0,0,w,h);g.fillStyle='rgba(95,90,140,.12)';for(let x=24;x<w;x+=32)for(let y=24;y<h;y+=32){g.beginPath();g.arc(x,y,1.3,0,Math.PI*2);g.fill();}
 const shad=g.createRadialGradient(w/2,h*.78,10,w/2,h*.78,h*.42);shad.addColorStop(0,'rgba(70,60,120,.14)');shad.addColorStop(1,'rgba(70,60,120,0)');g.fillStyle=shad;g.beginPath();g.ellipse(w/2,h*.78,h*.38,h*.17,0,0,Math.PI*2);g.fill();
-const t=phase;switch(activeScene){
+const t=processProgress;switch(activeScene){
 case 'materials':yarnBall(-1.3,-.23,-.2,.84);hook(.73,.17,.9,-.29);break;
-case 'knot':tube(ellipse(-.25,.13,.65,.8,.18),C.pink,19);tube(curve(p=>P(-.8+p*.6,-.6-p*.9,.1),40),C.pink,18);tube(curve(p=>P(.23+p*.5,-.3-p*.5,.12),30),C.pinkLight,18);hook(.7,-.35,.72,.38);break;
+case 'knot':drawKnotProcess(processProgress);break;
 case 'grip':tube(curve(q=>P(-2.2+3.4*q,.2+Math.sin(q*3)*.3,Math.sin(q*6)*.1),60),C.pink,18);hook(.15,.15,.95,.1);tube(ellipse(-.8,.15,.42,.55,-.1),C.pinkLight,16);break;
-case 'motion':tube(ellipse(-.5,-.15,.57,.67,0),C.pink,18);hook(.6,-.12,.95,-.25);tube(curve(q=>P(-2+2*q,1.12-.3*q+Math.sin(q*5+t*1.2)*.12,.22),52),C.pinkLight,18);break;
-case 'chain':chains(Math.max(4,Math.min(9,state.chains||7)),-.25);tube(curve(q=>P(-2.25+q*.6,-.25-q*.28,0),20),C.pink,15);hook(1.5,.56,.62,.38);break;
+case 'motion':drawChainProcess(processProgress,0);break;
+case 'chain':drawChainProcess(processProgress,state.chains);break;
 case 'single':chains(7,-1.03);tube(ellipse(-.25,-.22,.43,.62,.33),C.pinkLight,18);tube(ellipse(.08,.1,.34,.46,.44),C.pink,15);hook(.52,.5,.66,.12);break;
 case 'swatch':coils(7,Math.min(4,Math.max(2,state.row)));hook(1.6,.99,.45,.09);break;
 case 'finish':coils(6,3);tube(curve(q=>P(1.8-.5*q,1.1-1.5*q+.1*Math.sin(q*10),.32),36),C.pinkLight,10);hook(-.1,1.2,.52,-.38);break;
@@ -64,9 +157,13 @@ case 'finish':coils(6,3);tube(curve(q=>P(1.8-.5*q,1.1-1.5*q+.1*Math.sin(q*10),.3
 // soft ink annotation with motion cue
 const cx=w*.75,cy=h*.78;g.save();g.fillStyle='rgba(255,251,254,.86)';g.strokeStyle='rgba(59,51,85,.25)';g.lineWidth=1.2;g.beginPath();g.roundRect(cx-52,cy-13,104,26,13);g.fill();g.stroke();g.fillStyle='#5d537a';g.textAlign='center';g.font=`${Math.max(9,w*.013)}px ui-monospace,monospace`;g.fillText('ILLUSTRATIVE 3D',cx,cy+4);g.restore();}
 function resize(){const rect=canvas.getBoundingClientRect(),d=Math.min(2,devicePixelRatio||1);if(rect.width&&rect.height){const W=Math.floor(rect.width*d),H=Math.floor(rect.height*d);if(canvas.width!==W||canvas.height!==H){canvas.width=W;canvas.height=H;}}}
-function updateScene(){activeScene=LESSONS[state.step].scene;resize();drawDiagram();}
-function tick(timestamp){if(modelPlaying&&timestamp-lastFrame>30){phase+=(timestamp-lastFrame||16)/1000;lastFrame=timestamp;resize();drawDiagram();}requestAnimationFrame(tick);}
-canvas.addEventListener('pointerdown',e=>{dragging=true;lastPointer={x:e.clientX,y:e.clientY};canvas.setPointerCapture(e.pointerId);});canvas.addEventListener('pointermove',e=>{if(!dragging)return;yaw+=(e.clientX-lastPointer.x)*.008;pitch=Math.max(-.8,Math.min(.8,pitch+(e.clientY-lastPointer.y)*.005));lastPointer={x:e.clientX,y:e.clientY};drawDiagram();});canvas.addEventListener('pointerup',()=>dragging=false);canvas.addEventListener('pointercancel',()=>dragging=false);canvas.addEventListener('wheel',e=>{e.preventDefault();zoom=Math.max(.64,Math.min(1.65,zoom-e.deltaY*.001));drawDiagram();},{passive:false});canvas.addEventListener('keydown',e=>{if(e.key==='ArrowLeft'||e.key==='ArrowRight'){yaw+=e.key==='ArrowLeft'?.14:-.14;drawDiagram();e.preventDefault();}});
+function updateScene(){const next=LESSONS[state.step].scene;const animated=Boolean(ANIMATED_SCENES[next]);if(next!==activeScene){processProgress=0;modelPlaying=animated?!REDUCED_MOTION:false;}activeScene=next;$('viewerPlaybackControls').hidden=!animated;$('viewerPlayButton').hidden=!animated;$('viewerBottomTimeline').hidden=!animated;syncPlaybackUI();resize();drawDiagram();}
+function currentPhaseIndex(){const labels=ANIMATED_SCENES[activeScene];if(!labels)return 0;return Math.max(0,Math.min(labels.length-1,Math.floor(processProgress/(TIMELINE_MS/labels.length))));}
+function syncPlaybackUI(){const labels=ANIMATED_SCENES[activeScene];const btn=$('viewerPlayButton');btn.textContent=modelPlaying?'Ⅱ':'▶';const label=modelPlaying?'Pause process':'Play process';btn.title=label;btn.setAttribute('aria-label',label);$('viewerTimeline').value=String(Math.round(processProgress/TIMELINE_TOTAL_MS*1000));$('viewerPhaseText').textContent=labels?`Phase ${currentPhaseIndex()+1} of ${labels.length} · ${labels[currentPhaseIndex()]}`:'';}
+function tick(timestamp){const now=timestamp;const canAdvance=modelPlaying&&ANIMATED_SCENES[activeScene]&&!state.paused&&view==='learn'&&!document.hidden;if(canAdvance){const raw=processProgress+Math.min(64,now-(lastFrame||now)||16)*speed;lastFrame=now;if(raw>=TIMELINE_TOTAL_MS)processProgress=0;else processProgress=Math.min(TIMELINE_MS,Math.max(0,raw));syncPlaybackUI();resize();drawDiagram();}else lastFrame=now;requestAnimationFrame(tick);}
+function seekPhase(index){const labels=ANIMATED_SCENES[activeScene];if(!labels)return;const idx=Math.max(0,Math.min(labels.length-1,index));modelPlaying=false;processProgress=idx*Math.floor(TIMELINE_MS/labels.length);lastFrame=0;syncPlaybackUI();drawDiagram();}
+canvas.addEventListener('pointerdown',e=>{pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});if(pointers.size===1){dragging=true;lastPointer={x:e.clientX,y:e.clientY};}else{dragging=false;pinchDistance=0;}canvas.setPointerCapture(e.pointerId);e.preventDefault();});canvas.addEventListener('pointermove',e=>{const tracked=pointers.has(e.pointerId);if(tracked)pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});if(pointers.size===2){const pts=[...pointers.values()];const distance=Math.hypot(pts[0].x-pts[1].x,pts[0].y-pts[1].y);if(pinchDistance)zoom=Math.max(.64,Math.min(1.65,zoom*distance/pinchDistance));pinchDistance=distance;drawDiagram();return;}if(!dragging||!lastPointer){return;}yaw+=(e.clientX-lastPointer.x)*.008;pitch=Math.max(-.8,Math.min(.8,pitch+(e.clientY-lastPointer.y)*.005));lastPointer={x:e.clientX,y:e.clientY};$('viewerAngle').value='free';drawDiagram();});function releasePointer(e){pointers.delete(e.pointerId);if(pointers.size<2)pinchDistance=0;if(pointers.size===1){const only=[...pointers.values()][0];lastPointer={x:only.x,y:only.y};dragging=true;}else if(!pointers.size)dragging=false;}canvas.addEventListener('pointerup',releasePointer);canvas.addEventListener('pointercancel',releasePointer);canvas.addEventListener('wheel',e=>{e.preventDefault();zoom=Math.max(.64,Math.min(1.65,zoom-e.deltaY*.001));drawDiagram();},{passive:false});canvas.addEventListener('keydown',e=>{if(e.key==='ArrowLeft'||e.key==='ArrowRight'){yaw+=e.key==='ArrowLeft'?.14:-.14;drawDiagram();e.preventDefault();}});
+canvas.addEventListener('keydown',e=>{if(e.key==='+'||e.key==='='){zoom=Math.max(.64,Math.min(1.65,zoom+.1));drawDiagram();e.preventDefault();}else if(e.key==='-'){zoom=Math.max(.64,Math.min(1.65,zoom-.1));drawDiagram();e.preventDefault();}});
 // Camera: never persisted; no uploads. External MediaPipe model files load only after opting in.
 async function startCamera(){if(!navigator.mediaDevices?.getUserMedia){$('visionStatus').textContent='Camera requires HTTPS or localhost and a compatible browser.';return;}try{const stream=await navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:{ideal:facing},width:{ideal:1280},height:{ideal:720}}});cameraStream=stream;$('cameraVideo').srcObject=stream;await $('cameraVideo').play();$('cameraPlaceholder').hidden=true;$('cameraLivePill').hidden=false;$('cameraButton').textContent='◉ Turn off camera';$('flipCameraButton').disabled=false;$('visionButton').disabled=false;$('visionStatus').textContent='Camera ready. Place yarn and both hands in frame. Activate optional hand landmarks below.';if(tracking)startTracking();}catch(err){$('visionStatus').textContent=err?.name==='NotAllowedError'?'Camera permission was blocked. Allow access in browser settings.':`Camera unavailable: ${err.message||'unknown error'}`;}}
 function stopTracking(){if(trackingTimer)cancelAnimationFrame(trackingTimer);trackingTimer=null;const c=$('handOverlay');c.getContext('2d').clearRect(0,0,c.width,c.height);}
@@ -87,9 +184,9 @@ function selfCheck(kind){const good=kind==='looks-good';$('reviewFeedback').text
 on('looksGood','click',()=>selfCheck('looks-good'));
 on('needHelp','click',()=>selfCheck('need-tip'));
 on('cameraButton','click',async()=>{if(cameraStream)stopCamera();else await startCamera();});on('flipCameraButton','click',async()=>{facing=facing==='environment'?'user':'environment';stopCamera();await startCamera();});on('visionButton','click',async()=>{if(tracking){tracking=false;stopTracking();$('visionButton').textContent='Enable hand landmarks ↗';$('visionStatus').textContent='Hand landmark overlay off. Camera stays on.';}else await enableTracking();});
-on('viewerResetButton','click',()=>{yaw=-.23;pitch=.13;zoom=1;drawDiagram();});on('viewerPlayButton','click',()=>{modelPlaying=!modelPlaying;$('viewerPlayButton').textContent=modelPlaying?'Ⅱ':'▶';$('viewerPlayButton').title=modelPlaying?'Pause illustration motion':'Play illustration motion';if(modelPlaying)lastFrame=performance.now();drawDiagram();});
+on('viewerResetButton','click',()=>{[yaw,pitch]=ANGLE_PRESETS.front;zoom=1;$('viewerAngle').value='front';drawDiagram();});on('viewerPlayButton','click',()=>{if(activeScene==='finish'||activeScene==='materials')return;if(processProgress>=TIMELINE_MS)processProgress=0;modelPlaying=!modelPlaying;if(!modelPlaying)lastFrame=0;syncPlaybackUI();});on('viewerTimeline','input',()=>{const pos=Number($('viewerTimeline').value)||0;modelPlaying=false;processProgress=Math.max(0,Math.min(TIMELINE_MS,pos/1000*TIMELINE_TOTAL_MS));lastFrame=0;syncPlaybackUI();drawDiagram();});on('viewerPreviousPhase','click',()=>seekPhase(currentPhaseIndex()-1));on('viewerNextPhase','click',()=>seekPhase(currentPhaseIndex()+1));on('viewerSpeed','input',()=>{speed=parseFloat($('viewerSpeed').value)||1;});on('viewerAngle','input',()=>{const preset=ANGLE_PRESETS[$('viewerAngle').value];if(preset){[yaw,pitch]=preset;drawDiagram();}});
 function about(open){modal('aboutOverlay',open);}on('aboutButton','click',()=>about(true));on('closeAbout','click',()=>about(false));on('aboutOkay','click',()=>about(false));document.addEventListener('keydown',e=>{if(e.key==='Escape'){modal('pauseOverlay',false);modal('aboutOverlay',false);}});
-window.addEventListener('pagehide',stopCamera);window.addEventListener('resize',resize);
+window.addEventListener('pagehide',stopCamera);window.addEventListener('resize',()=>{resize();drawDiagram();});
 $('viewerPlayButton').textContent=modelPlaying?'Ⅱ':'▶';render();requestAnimationFrame(tick);
 if(state.paused){$('pauseSnapshot').textContent=`CURRENT STEP ${two(state.step+1)} · ${LESSONS[state.step].short}\n${state.chains} chains · ${state.singles} single crochets · row ${state.row}`;modal('pauseOverlay',true);}
 // Narrow read/write surface for the optional WebMCP tool layer (webmcp.js).

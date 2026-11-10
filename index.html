@@ -59,14 +59,35 @@
           <div class="viewer-toolbar">
             <span class="scene-label"><span class="status-dot"></span> INTERACTIVE STITCH MODEL</span>
             <div class="viewer-tools">
-              <button type="button" id="viewerPlayButton" class="chip-button" aria-label="Pause animation" title="Pause animation">Ⅱ</button>
+              <button type="button" id="viewerPlayButton" class="chip-button" aria-label="Pause process" title="Pause process">Ⅱ</button>
               <button type="button" id="viewerResetButton" class="chip-button" title="Reset 3D angle">⟲</button>
               <span class="viewer-badge">3D</span>
             </div>
           </div>
           <canvas id="stitchCanvas" aria-label="Rotatable illustrated 3D crochet model showing the current technique" tabindex="0"></canvas>
           <div class="viewer-center-label" id="modelLabel">YARN + HOOK</div>
-          <div class="viewer-bottom"><span>↻ DRAG TO ROTATE</span><span>SCROLL / PINCH TO ZOOM</span></div>
+          <div class="viewer-bottom"><span id="viewerBottomRotate" aria-hidden="true">↻ DRAG / PINCH ROTATE + ZOOM</span><span id="viewerBottomTimeline" aria-hidden="true">PHASE CLOCK + SLOW MOTION</span></div>
+        </div>
+        <div id="viewerPlaybackControls" class="viewer-playback" hidden>
+          <div class="playback-row">
+            <button type="button" id="viewerPreviousPhase" aria-label="Previous phase">‹ Phase</button>
+            <input id="viewerTimeline" type="range" min="0" max="1000" value="0" aria-label="Stitch process position">
+            <button type="button" id="viewerNextPhase" aria-label="Next phase">Phase ›</button>
+          </div>
+          <div class="playback-row">
+            <span id="viewerPhaseText" aria-live="polite"></span>
+            <select id="viewerSpeed" aria-label="Playback speed">
+              <option value="0.25">0.25×</option>
+              <option value="0.5">0.5×</option>
+              <option value="1" selected>1×</option>
+            </select>
+            <select id="viewerAngle" aria-label="Viewing angle">
+              <option value="front" selected>Front</option>
+              <option value="top">Top</option>
+              <option value="side">Side</option>
+              <option value="free">Free</option>
+            </select>
+          </div>
         </div>
         <div class="instruction-bar">
           <div class="instruction-icon" aria-hidden="true">↳</div>

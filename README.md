@@ -20,7 +20,7 @@ Open `http://localhost:8000/`. For camera access from a phone, deploy over HTTPS
 ## What works today
 
 - **Guided course:** eight steps from tools and slip knot through foundation chain, single crochet, rows, and fastening off.
-- **Illustrative stitch view:** rotatable and zoomable canvas scenes drawn from 3D coordinates. These are explanatory illustrations, not physically accurate crochet simulations or models generated from camera input.
+- **Illustrative stitch view:** rotatable and zoomable canvas scenes drawn from 3D coordinates. Lessons 2, 4, and 5 use a lesson-local playback timeline (play/pause, scrubber, phase buttons, speed, angle presets) for the ordered knot/chain process; the other lessons stay explanatory static scenes. These are explanatory illustrations, not physically accurate crochet simulations or models generated from camera input.
 - **Camera practice:** on-device preview with front/back switch, plus an opt-in MediaPipe Hand Landmarker overlay that reports whether hands are in frame. Model and WebAssembly assets load from an external CDN only when enabled.
 - **Manual tracking:** foundation-chain and single-crochet counters, undo, row number and next-row control, lesson check-offs, self-check and tips, and an activity journal.
 - **Persistence:** pause, resume, and automatic `localStorage` saves in the same browser profile. No cross-device sync.
@@ -103,7 +103,7 @@ Detailed phases and exit criteria: [`docs/ROADMAP.md`](docs/ROADMAP.md).
 
 | Order | Work | Done when |
 |---|---|---|
-| 1 | Make the stitch studio more precise and controllable | Each lesson has a phase timeline, scrub/slow-motion, rotation presets, and a highlighted active loop/hook path |
+| 1 | Make the stitch studio more precise and controllable | Lessons 2, 4, 5 have a named phase timeline with scrubber, phase steps, speed, and front/top/side presets; the remaining illustrated lessons stay static |
 | 2 | Add a camera **setup** guide, not a correctness judge | Step-specific framing, angle, distance, and lighting hints work on phone and laptop without nagging |
 | 3 | Prototype foundation-chain tracking | A phase-aware model proposes a count with confidence; the learner confirms, corrects, or ignores it |
 | 4 | Prove efficiency and precision | Measured count error, false corrections, override rate, latency, and device performance meet the gates in the roadmap |
