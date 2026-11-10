@@ -6,6 +6,8 @@ The prototype covers the first learning loop: follow a step, watch the stitch mo
 
 ## Quick start
 
+Requirements: a modern browser; Node.js 20 or newer for the build and smoke test; Python 3 for the no-build preview.
+
 No build step is needed to preview the site:
 
 ```bash
@@ -76,6 +78,8 @@ flowchart LR
 
 **Research challenge:** accurate stitch recognition requires tracking small, frequently occluded yarn and hook movements over time. Hand landmarks alone cannot establish stitch correctness. A recognizer needs consented multi-angle clips, action-phase labels, hook/yarn tracking, temporal smoothing, an explicit *not sure* result, and evaluation on unseen learners. A low-confidence result must never silently advance a learner.
 
+See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for the current runtime and the proposed computer-vision extension.
+
 ## Roadmap and MVP
 
 | Phase | Focus | Prototype status |
@@ -92,6 +96,8 @@ MVP scope:
 1. **Deliver the beginner course:** functional guidance, camera preview, and persistent progress. The current prototype covers this with illustrative rather than physically accurate 3D.
 2. **Run one bounded CV experiment:** recognize foundation-chain movements and measure stitch-count accuracy across users, camera angles, and yarn types.
 3. **Keep the manual path primary** until recognition meets the evaluation bar above.
+
+Detailed phases and exit criteria: [`docs/ROADMAP.md`](docs/ROADMAP.md).
 
 ## Architecture
 
@@ -118,6 +124,8 @@ Browser agent ─────► document.modelContext ► webmcp.js ──► s
 - `wrangler.toml` — Cloudflare Workers static-assets configuration
 - `tests/test-smoke.cjs` — Node smoke test for navigation, counts, persistence, and journal
 - `docs/SPEC.md` — product concept, goals, core features, roadmap, and MVP scope
+- `docs/ARCHITECTURE.md` — current runtime and proposed computer-vision extension
+- `docs/ROADMAP.md` — phased roadmap with prototype status
 - `docs/tests/` — browser E2E evidence for the UI and deployment changes
 - `.omp/skills/pr-e2e-evidence/` — repository-local E2E evidence workflow
 
@@ -173,7 +181,16 @@ Connect `kaylaque/crochetfieldlab` in the Cloudflare dashboard, then use these s
 | Deploy command | `npx wrangler deploy` |
 | Root directory | `/` |
 
-`cf-pages` gates deployments, so ordinary commits on `main` do not trigger a build. Keep it current with `main` before deploying, then push `cf-pages`. The GitHub app authorizes the build; no Cloudflare token is stored in this repository. For a token-based runner instead, set `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` in that runner's secrets.
+`cf-pages` is a deployment branch, not a Cloudflare Pages project. It gates deployments, so ordinary commits on `main` do not trigger a build. The branch contains a build-trigger commit that is not on `main`, so merge instead of requiring a fast-forward:
+
+```bash
+git fetch origin
+git switch cf-pages
+git merge origin/main
+git push origin cf-pages
+```
+
+The GitHub app authorizes the build; no Cloudflare token is stored in this repository. For a token-based runner instead, set `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` in that runner's secrets. For a direct deploy without Workers Builds, run `npm run deploy` after `npx wrangler login`.
 
 For a manual rebuild, create a Deploy Hook for `cf-pages` under **Settings → Builds → Deploy Hooks** and POST to its URL.
 

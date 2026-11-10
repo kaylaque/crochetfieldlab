@@ -1,110 +1,44 @@
-# Crochet Field Lab — product specification
+# Crochet Field Lab — Product Specification
 
-Status: prototype v1. The implementation covers the learning loop and manual progress; computer-vision feedback remains research work.
+## Goal
+A beginner-friendly, mobile-first crochet learning website combining guided stitch illustrations, optional camera assistance, and resumable progress.
 
-## 1. Concept
+## Users & primary flow
+**User:** Someone learning crochet with a phone or laptop and their own yarn/hook.
 
-Crochet Field Lab is a browser-based, camera-assisted crochet companion for beginners. It combines guided lessons, an illustrative stitch view, camera practice, manual tracking, and local progress so a learner can practice independently without losing their place.
+1. Pick a lesson → see **current step, next action, and progress**.
+2. Rotate/zoom the illustrative stitch guide; open the linked video chapter if needed.
+3. Optionally enable camera and hand-landmark overlay for framing.
+4. Practice, manually confirm each stitch/row, and check off lessons.
+5. Pause → return later to the same step and stitch counts.
 
-The product direction is an intelligent tutor that observes real hand and hook movement and gives bounded, useful feedback. The current prototype is the foundation for that pipeline, not evidence that the pipeline works.
+## Functional requirements
 
-## 2. Goals
-
-- **Learn:** follow step-by-step visual guidance for fundamental crochet techniques.
-- **Practice:** use a phone or laptop camera to observe hands and work.
-- **Get feedback:** detect stitch actions, identify mistakes, and suggest corrections.
-- **Track progress:** count stitches and rows, show completed steps, and surface the next instruction.
-- **Pause and resume:** save session history and return to the same place.
-
-Current scope: learn, manual track, and resume work. Camera hand framing works. Automatic feedback does not.
-
-## 3. References
-
-| Reference | Inspiration | Current use |
+| ID | Requirement | Version |
 |---|---|---|
-| [ESP32 Field Lab](https://ardchain.github.io/esp32-field-lab/) | Guided-learning UX, step navigation, visual controls | Interaction concept |
-| [Garis Tepi Cangkang](https://bsw.kadcom.dev/trik/garis-tepi-cangkang/) | Stylized outline rendering, visual design | Visual direction |
-| [Beginner crochet tutorial](https://youtu.be/aAxGTnVNJiE) | Course topics and learning sequence | Curriculum and chapter links |
-| [CrochetPARADE](https://crochetparade.org/) | Procedural crochet modeling and stitch animation | Future work |
-| [Yarnify3D](https://yarnify3d.com/) | Live 3D pattern preview and guided instructions | Future work |
-| [Crochet Slicer](https://nordiclayerlab.se/) | 3D model-to-crochet-pattern conversion | Future work |
+| F01 | Eight lessons: materials, slip knot, grip, yarn over, chain, single crochet, rows, fastening off | v1 |
+| F02 | Step navigation, next-action prompt, self-check tips, video chapter links | v1 |
+| F03 | Rotatable, zoomable **illustrative** yarn/hook model | v1 |
+| F04 | Browser camera with front/back switch and optional hand-landmark overlay | v1 |
+| F05 | Manual chain/stitch/row count, undo, lesson completion and journal | v1 |
+| F06 | Automatic local save; pause and resume in the same browser | v1 |
+| F07 | Camera-angle guidance and hook/yarn detection | Research |
+| F08 | Automatic stitch counting and mistake feedback from video | Research |
+| F09 | AI explanations, pattern import, and generated 3D lessons | Later |
 
-No footage, graphics, or source code from these references is copied or rehosted.
+## Acceptance criteria (v1)
+- A beginner can complete the first course **without enabling the camera or AI**.
+- A refresh retains the selected step, completed lessons, stitch counts, and journal in the same browser.
+- Counting can be corrected; navigation and camera permissions fail gracefully.
+- Layout works on laptop and mobile screen widths.
+- The UI never labels stitches as *correct* based only on hand landmarks.
 
-## 4. Core features
+## Out of scope for v1
+Photorealistic stitch simulation, automatic recognition, multi-device sync, user accounts, and cloud video storage.
 
-| Feature | Description | Prototype status |
-|---|---|---|
-| 3D learning studio | Rotatable stitch models, animation playback, guided steps | Partial — Canvas 2D projection of 3D coordinates; illustrative, not physically accurate |
-| Camera practice | Live camera feed with optional hand/hook/yarn tracking | Partial — camera preview and optional MediaPipe hand landmarks; no hook or yarn tracking |
-| Smart feedback | Recognize stitch sequences and explain potential errors | Not started — static lesson tips and manual self-check only |
-| Stitch and row tracker | Manual counting first, automatic detection as research | Partial — manual chains, single crochet, rows, undo; no automatic counting |
-| Project journal | Save progress, checkpoints, completed rows, and session history | Partial — activity journal and resumable state in `localStorage`; no named checkpoints or multi-project history |
-| Beginner curriculum | Slip knot, grip, yarn over, foundation chain, single crochet, turning rows, fastening off | Delivered as eight guided steps with an 11-chain practice |
-
-Prototype additions beyond the original feature list: optional WebMCP tools for agent access to lesson actions, and a Cloudflare Workers deployment path.
-
-## 5. Technical exploration
-
-Proposed recognition pipeline:
-
-```mermaid
-flowchart LR
-  A[Camera] --> B[Hand tracking]
-  B --> C[Hook and yarn detection]
-  C --> D[Temporal stitch recognition]
-  D --> E[Feedback]
-  E --> F[Progress update]
-```
-
-| Technology | Purpose | In prototype |
-|---|---|---|
-| Three.js / WebGL | Interactive 3D crochet visualization | No — Canvas 2D projection of 3D coordinates |
-| MediaPipe Hands | Hand landmark tracking | Yes — optional, framing only |
-| Object detection / segmentation | Identify hook, yarn, and loops | No |
-| Temporal action recognition | Identify crochet movements and completed stitches | No |
-| VLM / LLM | Context-aware mistake explanation and tutoring | No — static lesson tips |
-| State machine | Validate action order and manage lesson progress | Partial — lesson and counter state; no action validation |
-| Browser storage / IndexedDB | Persist progress and session history | Yes — `localStorage` only |
-
-**Research challenge:** accurate stitch recognition requires tracking small, frequently occluded yarn and hook movements over time. Hand landmarks alone cannot determine stitch correctness.
-
-A credible recognizer needs:
-
-1. Consented, labeled multi-angle clips with action-phase classes, for example hook insert, yarn over, pull up a loop, yarn over, and pull through. Add negatives such as wrong insertion point, dropped loop, tight stitch, and hand occlusion.
-2. Hook and yarn detection and tracking alongside hand landmarks.
-3. Short-video phase classification with temporal smoothing, uncertainty, and an explicit *not sure* result.
-4. Evaluation on unseen learners, yarn colors, hook styles, camera angles, handedness, and lighting. Report phase F1, false-correction rate, manual override rate, latency, and on-device performance.
-
-A low-confidence result must never silently advance a learner.
-
-## 6. Roadmap
-
-| Phase | Focus | Status |
-|---|---|---|
-| **P0 — Fundamental course** | Improve illustrations, beginner instructions, lesson navigation, mobile UX | Started — eight steps, responsive UI, illustrative scenes |
-| **P1 — Progress tracking** | Stitch and row counting, undo, checkpoints, pause/resume | Started — manual counts, undo, rows, pause/resume, journal |
-| **P2 — Computer vision** | Camera calibration, hand tracking, hook/yarn detection | Partial — camera preview and optional hand landmarks |
-| **P3 — Stitch recognition** | Temporal recognition, automatic counting, error detection, evaluation | Not started |
-| **P4 — AI tutor** | Personalized feedback, contextual explanations, voice assistance | Not started |
-| **P5 — Product expansion** | Pattern import, pattern-to-3D, amigurumi, custom projects, community | Not started |
-
-## 7. MVP scope
-
-1. **First priority:** a complete beginner course with functional guidance, camera preview, and persistent progress. The current prototype delivers this with illustrative rather than physically accurate visuals.
-2. **First CV experiment:** recognize foundation-chain movements and measure stitch-count accuracy across users, camera angles, and yarn types.
-3. **Long-term vision:** turn static crochet tutorials into a companion that observes practice, guides the next action, and remembers each learner's progress.
-
-## 8. Non-goals and constraints
-
-- No claim of automatic stitch correctness until a recognizer is evaluated against the criteria above.
-- No camera upload or recording by default. Video stays local.
-- No silent advancement from a low-confidence recognition result.
-- Manual counting and lesson navigation stay available even when camera features are off.
-- Progress remains device-local until a sync design exists.
-
-## 9. Implementation note
-
-This repository is the working prototype. It supports guided lessons, illustrative stitch scenes, camera preview, optional hand landmarks, manual progress tracking, WebMCP tools, and local persistence. Automatic stitch recognition and correctness feedback remain experimental goals.
-
-See the [README](../README.md) for setup, deployment, and current limitations.
+## Related documents
+- [README](../README.md) — setup, preview, deployment, privacy, and limitations
+- [Architecture](ARCHITECTURE.md) — current runtime and proposed computer-vision extension
+- [Roadmap](ROADMAP.md) — phases, status, and next sprint
+- [Design system](../DESIGN_SYSTEM.md) — visual tokens and component vocabulary
+- [Browser E2E evidence](tests/crochetfieldlab-2026-11/e2e-evidence.md) — captured UI and deployment checks
