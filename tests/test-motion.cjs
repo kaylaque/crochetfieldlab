@@ -18,8 +18,25 @@ for(const motion of [KNOT_MOTION,CHAIN_MOTION]){
     const b=sampleMotion(motion,phaseStart(motion,phase)+phase.durationMs-1);
     assert.equal(a.phaseIndex,b.phaseIndex);
   }
+  for(const phase of motion.phases){
+    const mid=sampleMotion(motion,phaseStart(motion,phase)+phase.durationMs/2).pose;
+    assert.notDeepEqual(mid,phase.from,`${phase.name} must animate away from its from pose`);
+    assert.ok(maxDelta(mid,phase.to)<maxDelta(mid,phase.from),`${phase.name} must progress toward its to pose`);
+    assert.ok(maxDelta(mid,phase.from)>0.05,`${phase.name} must move visibly by mid-phase`);
+  }
+  const lastPhase=motion.phases.at(-1);
+  const lastEnd=sampleMotion(motion,phaseStart(motion,lastPhase)+lastPhase.durationMs-1).pose;
+  assert.notDeepEqual(lastEnd,lastPhase.from,`${lastPhase.name} must not hold a frozen pose`);
+  assert.ok(maxDelta(lastEnd,lastPhase.from)>0.05,`${lastPhase.name} must move visibly`);
 }
 function phaseStart(motion,phase){return motion.phases.indexOf(phase)*phase.durationMs;}
+function maxDelta(a,b){
+  let max=0;
+  for(const name of Object.keys(a.paths))for(let i=0;i<a.paths[name].length;i++)
+    for(let j=0;j<3;j++)max=Math.max(max,Math.abs(a.paths[name][i][j]-b.paths[name][i][j]));
+  for(const key of Object.keys(a.hook))max=Math.max(max,Math.abs(a.hook[key]-b.hook[key]));
+  return max;
+}
 const p=KNOT_MOTION.phases[0].from,m=mirrorPose(p);
 for(const name of Object.keys(p.paths))for(let i=0;i<p.paths[name].length;i++){
   assert.equal(m.paths[name][i][0],-p.paths[name][i][0]);

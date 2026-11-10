@@ -5,16 +5,20 @@ const P = (...points) => points;
 const pose = (tail, working, active, hook, order = ['tail', 'working', 'active']) => ({ paths: { tail, working, active }, hook, order });
 const H = (x, y, angle = -.2, scale = .7) => ({ x, y, angle, scale });
 
-// Knot: apart -> crossed loop -> bight through -> bight on hook -> sliding knot tight.
+// Knot keyframes: yarn laid out wide -> apart -> crossed loop -> bight through -> bight on hook -> sliding knot tight.
+// Each labeled phase animates one keyframe into the next, so the last phase really tightens the knot.
 const knotPoses = [
+  pose(P([-2.7, -.75, 0], [-1.45, -.4, 0]), P([2.5, -.75, 0], [1.75, -.55, 0], [1.05, -.3, 0]), P([1.05, -.3, 0], [1.05, -.3, 0], [1.05, -.3, 0]), H(1.35, .2, -.14)),
   pose(P([-2, -.5, 0], [-.8, -.2, 0]), P([1.8, -.5, 0], [1.2, -.35, 0], [.8, -.2, 0]), P([.8, -.2, 0], [.8, -.2, 0], [.8, -.2, 0]), H(1.2, .15, -.2)),
   pose(P([-2, -.5, 0], [-.55, -.1, -.25]), P([1.8, -.5, 0], [.55, .55, .25], [-.55, -.1, .25]), P([-.55, -.1, .25], [-.55, -.1, .25], [-.55, -.1, .25]), H(1.2, .15, -.2)),
   pose(P([-2, -.5, 0], [-.55, -.1, -.25]), P([1.8, -.5, 0], [.55, .55, .25], [-.55, -.1, .25]), P([-.55, -.1, .25], [-.15, .65, .3], [.25, -.1, .3]), H(1.2, .15, -.2)),
   pose(P([-2, -.5, 0], [-.3, -.15, -.15]), P([1.8, -.5, 0], [.6, .45, .2], [-.3, -.15, .2]), P([-.3, -.15, .2], [.15, .55, .35], [.55, -.05, .35]), H(.65, .05, -.35)),
   pose(P([-2, -.5, 0], [-.18, -.12, -.1]), P([1.8, -.5, 0], [.65, .35, .2], [-.18, -.12, .2]), P([-.18, -.12, .2], [.2, .45, .35], [.55, -.02, .35]), H(.72, .02, -.35))
 ];
-// Chain: loop on hook -> yarn over -> pull through -> single new loop left on hook.
+// Chain keyframes: slack loop settles onto hook -> yarn over -> pull through -> new chain V.
+// Four labeled phases, so the final "New chain V" phase actively draws the new loop through.
 const chainPoses = [
+  pose(P(), P([-2.5, -.8, 0], [-1.65, -.5, 0], [-.85, -.25, 0]), P([-.45, .1, .1], [.1, .62, .1], [.55, .1, .1]), H(.9, .15, -.16)),
   pose(P(), P([-1.8, -.55, 0], [-1.1, -.35, 0], [-.45, -.2, 0]), P([-.25, .05, .15], [.05, .5, .15], [.35, .05, .15]), H(.8, .1, -.25)),
   pose(P(), P([-1.8, -.55, 0], [-.1, .55, -.2], [.5, .35, .3]), P([-.25, .05, .15], [.05, .5, .15], [.35, .05, .15]), H(.72, .05, -.55)),
   pose(P(), P([-1.8, -.55, 0], [.15, .2, .25], [.55, -.15, .3]), P([-.35, .05, .1], [.05, .35, .1], [.45, .05, .1]), H(.55, -.15, -.35)),
@@ -26,16 +30,20 @@ const PHASE_NAMES = {
   chain: ['One loop on hook', 'Yarn over', 'Pull through', 'New chain V']
 };
 
+// Keyframes outnumber phases by one: phase i animates poses[i] into poses[i + 1].
 const makeMotion = (name, poses) => {
-  const durationMs = 6000 / poses.length;
+  const names = PHASE_NAMES[name];
+  if (!names) throw new Error(`StitchMotion: unknown motion "${name}"`);
+  if (poses.length !== names.length + 1) throw new Error(`StitchMotion: ${name} needs ${names.length + 1} keyframes for ${names.length} phases`);
+  const durationMs = 6000 / names.length;
   return {
     name,
     durationMs: 6000,
-    phases: poses.map((from, i) => ({
-      name: PHASE_NAMES[name][i],
+    phases: names.map((phaseName, i) => ({
+      name: phaseName,
       durationMs,
-      from,
-      to: poses[Math.min(i + 1, poses.length - 1)]
+      from: poses[i],
+      to: poses[i + 1]
     }))
   };
 };
