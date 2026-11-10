@@ -164,3 +164,52 @@ assert.equal(mirrorEnv.el('viewerHandedness').value,'left');
 console.log('PASS: handedness swaps do not disturb playback or persisted counts.');
 
 console.log('PASS: knot/chain playback regression suite.');
+
+// Phase copy must never be cut off. Browser measurement at 750–800 px and 1024 px showed
+// clientWidth 179–228 px against 246 px of text while the label held a 150 px flex basis
+// beside three selects, so "Tighten the sliding knot" ended in an ellipsis.
+const styles=fs.readFileSync(__dirname+'/../styles.css','utf8');
+const phaseRules=[...styles.matchAll(/([^{}]*#viewerPhaseText[^{}]*)\{([^}]*)\}/g)].map(m=>({selector:m[1],body:m[2]}));
+assert.ok(phaseRules.length,'the phase label has a style rule');
+for(const rule of phaseRules){
+  assert.doesNotMatch(rule.body,/text-overflow\s*:\s*ellipsis/,'phase copy is never ellipsized');
+  assert.doesNotMatch(rule.body,/white-space\s*:\s*nowrap/,'phase copy may wrap instead of clipping');
+  const flex=rule.body.match(/flex\s*:\s*([^;}]+)/);
+  if(flex) assert.match(flex[1].trim(),/^1\s+1\s+100%$/,'the phase label claims a full row at every width');
+}
+console.log('PASS: phase label keeps a full row and is never ellipsized.');
+
+// The slider's maximum is reachable. Before this check, seeking to 1000 parked the playhead
+// at the 6000 ms timeline end but reported 882/1000, so the thumb visibly snapped backwards.
+const maxEnv=makeTestEnv({reducedMotion:true});
+vm.runInContext('changeStep(1)',maxEnv.sandbox);
+maxEnv.el('viewerTimeline').value='1000';
+maxEnv.callUI('viewerTimeline','input');
+assert.equal(maxEnv.el('viewerTimeline').value,'1000');
+assert.equal(maxEnv.el('viewerPhaseText').textContent,'Phase 5 of 5 · Tighten the sliding knot');
+// Phase boundaries stay evenly spaced across the full slider travel.
+for(const [value,expected] of [['0','Phase 1 of 5 · Lay yarn'],['250','Phase 2 of 5 · Cross to form a loop'],['500','Phase 3 of 5 · Pull a bight through'],['750','Phase 4 of 5 · Place loop on hook']]){
+  maxEnv.el('viewerTimeline').value=value;
+  maxEnv.callUI('viewerTimeline','input');
+  assert.equal(maxEnv.el('viewerPhaseText').textContent,expected);
+}
+console.log('PASS: slider maximum settles on the final frame without snapping back.');
+
+// The timeline repeats. Holding the settled final frame must end, or playback stalls forever
+// at the last pose because the clamped playhead can never reach the hold deadline again.
+const repeatEnv=makeTestEnv();
+vm.runInContext('changeStep(1)',repeatEnv.sandbox);
+const t0=repeatEnv.runTicks(0,1);
+repeatEnv.el('viewerTimeline').value='1000';
+repeatEnv.callUI('viewerTimeline','input');
+repeatEnv.callUI('viewerPlayButton','click'); // play from the settled end restarts at zero
+assert.equal(repeatEnv.el('viewerTimeline').value,'0');
+repeatEnv.el('viewerTimeline').value='990'; // 5940 ms, inside the last phase
+repeatEnv.callUI('viewerTimeline','input');
+repeatEnv.callUI('viewerPlayButton','click');
+const t1=repeatEnv.runTicks(t0,5); // 160 ms reaches the settled end
+assert.equal(repeatEnv.el('viewerTimeline').value,'1000','the settled final frame is held');
+repeatEnv.runTicks(t1,30); // 960 ms more crosses the 6.8 s loop deadline
+assert.ok(Number(repeatEnv.el('viewerTimeline').value)<900,'the timeline repeats after the settled hold');
+assert.equal(repeatEnv.storedChains(),0);
+console.log('PASS: playback holds the settled frame, then repeats instead of stalling.');
