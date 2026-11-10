@@ -10,9 +10,17 @@ const storage=new Map();const localStorage={getItem:k=>storage.get(k)||null,setI
 const rafCbs=[];
 const matchMediaResult={matches:false};
 const sandbox={document:doc,window:{addEventListener(){}},localStorage,matchMedia:()=>matchMediaResult,navigator:{},devicePixelRatio:1,requestAnimationFrame(fn){rafCbs.push(fn);return rafCbs.length},cancelAnimationFrame(){},scrollTo(){},performance:{now:()=>0},confirm:()=>true,console,Date,Math};
-vm.createContext(sandbox);
-vm.runInContext(fs.readFileSync(__dirname+'/../app.js','utf8'),sandbox,{filename:'app.js'});
 const appSource=fs.readFileSync(__dirname+'/../app.js','utf8');
+const motionSource=fs.readFileSync(__dirname+'/../stitch-motion.js','utf8');
+const rendererSource=fs.readFileSync(__dirname+'/../stitch-renderer.js','utf8');
+// Same load order as index.html: motion model, then renderer, then the app.
+function loadApp(context){
+  vm.runInContext(motionSource,context,{filename:'stitch-motion.js'});
+  vm.runInContext(rendererSource,context,{filename:'stitch-renderer.js'});
+  vm.runInContext(appSource,context,{filename:'app.js'});
+}
+vm.createContext(sandbox);
+loadApp(sandbox);
 
 // New playback feature: a fresh DOM state per check keeps the journal/count state deterministic.
 function makeTestEnv({reducedMotion=false}={}){
@@ -27,7 +35,7 @@ function makeTestEnv({reducedMotion=false}={}){
   const localDoc={getElementById:locEl,createElement:()=>localElement('dynamic'),querySelectorAll:()=>nav,body:{style:{}},addEventListener(){},hidden:false,get hidden(){return currentHidden},set hidden(v){currentHidden=v}};
   const localSandbox={document:localDoc,window:{addEventListener(){}},localStorage:{getItem:k=>localStorage.get(k)||null,setItem:(k,v)=>localStorage.set(k,v)},matchMedia:()=>reduced,navigator:{},devicePixelRatio:1,requestAnimationFrame(fn){localRaf.push(fn);return localRaf.length},cancelAnimationFrame(){},scrollTo(){},performance:{now:()=>0},confirm:()=>true,console,Date,Math};
   vm.createContext(localSandbox);
-  vm.runInContext(appSource,localSandbox,{filename:'app.js'});
+  loadApp(localSandbox);
   const callUI=(id,kind)=>localListeners[id+':'+kind]();
   return {doc:localDoc,storage:localStorage,el:locEl,callUI,sandbox:localSandbox,raf:localRaf,
     storedChains(){const last=[...localStorage.keys()].pop();return JSON.parse(localStorage.get(last)).chains;},
@@ -119,5 +127,40 @@ assert.equal(reducedEnv.el('viewerPhaseText').textContent,'Phase 1 of 5 · Lay y
 assert.equal(reducedEnv.el('viewerPlayButton').textContent,'▶');
 assert.equal(reducedEnv.el('viewerPlayButton').attrs['aria-label'],'Play process');
 console.log('PASS: reduced motion starts the lesson paused.');
+
+// Handedness is viewer memory: mirrored practice swaps the strand drawing only,
+// survives scene changes, and never touches counters or the journal.
+const handEnv=makeTestEnv({reducedMotion:true});
+vm.runInContext('changeStep(1)',handEnv.sandbox);
+assert.equal(handEnv.el('viewerHandedness').hidden,false);
+assert.equal(handEnv.el('viewerHandedness').value,'right');
+handEnv.el('viewerHandedness').value='left';
+handEnv.callUI('viewerHandedness','input');
+assert.equal(handEnv.el('viewerHandedness').value,'left');
+vm.runInContext('changeStep(4)',handEnv.sandbox);
+assert.equal(handEnv.el('viewerHandedness').value,'left');
+assert.equal(handEnv.storedChains(),0);
+assert.deepEqual(handEnv.storedEvents(),[]);
+vm.runInContext('changeStep(2)',handEnv.sandbox);
+assert.equal(handEnv.el('viewerPlaybackControls').hidden,true);
+console.log('PASS: handedness mirrors the model, persists across scenes, never counts.');
+
+// Switching handedness mid-phase leaves the playhead copy and stored state untouched.
+const mirrorEnv=makeTestEnv({reducedMotion:true});
+vm.runInContext('changeStep(3)',mirrorEnv.sandbox);
+mirrorEnv.el('viewerTimeline').value='500';
+mirrorEnv.callUI('viewerTimeline','input');
+const phaseText=mirrorEnv.el('viewerPhaseText').textContent;
+const chainsBefore=mirrorEnv.storedChains();
+const eventsBefore=mirrorEnv.storedEvents();
+for(const value of ['left','right','left']){
+  mirrorEnv.el('viewerHandedness').value=value;
+  mirrorEnv.callUI('viewerHandedness','input');
+  assert.equal(mirrorEnv.el('viewerPhaseText').textContent,phaseText);
+  assert.equal(mirrorEnv.storedChains(),chainsBefore);
+  assert.deepEqual(mirrorEnv.storedEvents(),eventsBefore);
+}
+assert.equal(mirrorEnv.el('viewerHandedness').value,'left');
+console.log('PASS: handedness swaps do not disturb playback or persisted counts.');
 
 console.log('PASS: knot/chain playback regression suite.');
