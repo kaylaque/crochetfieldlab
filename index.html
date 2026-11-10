@@ -3,10 +3,10 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <meta name="theme-color" content="#f8f6f0" />
+  <meta name="theme-color" content="#f7f4fb" />
   <meta name="description" content="Crochet Field Lab — camera-assisted beginner crochet practice with an interactive stitch guide, progress tracking and resume." />
   <title>Crochet Field Lab — Learn one stitch at a time</title>
-  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="styles.css?v=2" />
 </head>
 <body>
   <div class="app-shell">
@@ -116,8 +116,8 @@
 
   <div id="pauseOverlay" class="modal-layer" hidden role="dialog" aria-modal="true" aria-labelledby="pauseHeading"><div class="modal-card"><div class="modal-symbol">✳</div><span class="eyebrow">SAVE YOUR PLACE</span><h2 id="pauseHeading">A little break is lovely, too.</h2><p>Your lesson, stitch totals, and journal are saved on this device. Your camera has been turned off.</p><div id="pauseSnapshot" class="pause-summary"></div><button class="button primary" id="resumeButton" type="button">Resume my stitches →</button><button class="underlined-button" id="pauseJournalButton" type="button">Review my journal</button></div></div>
   <div id="aboutOverlay" class="modal-layer" hidden role="dialog" aria-modal="true" aria-labelledby="aboutHeading"><div class="modal-card"><button id="closeAbout" class="modal-close" type="button" aria-label="Close">×</button><span class="eyebrow">ABOUT THIS EXPERIMENT</span><h2 id="aboutHeading">Craft meets curiosity.</h2><p>This is a working front-end prototype: guided steps, a rotatable illustrative 3D model, a browser camera, optional hand landmark detection, and local progress.</p><p><strong>Not yet supported:</strong> automatic yarn/hook tracking, stitch correctness classification, automatic stitch counting, or physics-accurate crochet. Hand detection only evaluates whether hands are visible and approximately positioned.</p><p>The tutorial is linked to simplydaisy's original video, not copied or rehosted.</p><button class="button primary" id="aboutOkay" type="button">Got it →</button></div></div>
-  <script src="vendor/webmcp-polyfill.js"></script>
-  <script type="module" src="app.js"></script>
-  <script type="module" src="webmcp.js"></script>
+  <script src="vendor/webmcp-polyfill.js?v=2"></script>
+  <script type="module" src="app.js?v=2"></script>
+  <script type="module" src="webmcp.js?v=2"></script>
 </body>
 </html>

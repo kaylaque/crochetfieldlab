@@ -25,15 +25,17 @@
 
 | Token | Color | Usage |
 |---|---|---|
-| Ink | `#25312e` | Main text, borders, dark actions |
-| Paper | `#f8f6f0` | App background |
-| Card | `#fffcf5` | Panels and controls |
-| Sage | `#c5e2be` | Success/progress and soft instructional affordances |
+| Ink | `#2f2a44` | Main text, borders, dark actions |
+| Paper | `#f7f4fb` | App background |
+| Card | `#fffbfe` | Panels and controls |
+| Blue | `#b9d1f2` | Progress, status dots, soft instructional affordances |
+| Blue deep | `#3f5d8c` | Completed-step labels and quiet blue text |
 | Lilac | `#dac9f4` | Brand glyph, quiet highlights |
+| Purple | `#6f5aa8` | Active-step borders and selected controls |
 | Blush | `#f1b5c2` | Yarn color and visual focus |
-| Butter | `#f4df9e` | Next-action card |
-| Soft orange | `#f6c48e` | Supporting accent |
-
+| Pink soft | `#f6d3e1` | Next-action card and soft pink surfaces |
+| Mauve | `#ae6a86` | Editorial italic accent |
+| Rose | `#a34163` | Destructive actions only |
 
 Typography:
 - UI sans-serif: DM Sans, fallback system sans-serif.
@@ -41,11 +43,11 @@ Typography:
 - Instrument labels: DM Mono, fallback monospace.
 
 Shape & spacing:
-- Main panel borders: 1–1.5 px warm-grey.
+- Main panel borders: 1–1.5 px cool lavender-grey.
 - Controls: rounded ~8–13 px; modal ~19 px.
 - Explicit labels: `01 / 08`, `YOUR NEXT MOVE`, `CAMERA ASSIST`, `ACTIVITY LOG`.
 - Clear hierarchy: large editorial lesson heading → single concrete next action → small reassuring tip.
-- 3D viewport: pastel sage/cream stage, dotted background, outline tubes, rotate / zoom actions; never overclaim physical realism.
+- 3D viewport: pastel blue/pink stage, dotted background, outline tubes, rotate / zoom actions; never overclaim physical realism.
 
 ## Component vocabulary
 
