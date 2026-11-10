@@ -83,11 +83,17 @@ on('incrementCount','click',()=>count(1));on('decrementCount','click',()=>count(
 document.querySelectorAll('[data-view]').forEach(b=>b.addEventListener('click',()=>setView(b.dataset.view)));
 on('clearHistory','click',()=>{if(confirm('Clear activity entries? Stitch totals and lesson progress will remain.')){state.events=[];persist();renderJournal();}});
 on('resetAll','click',()=>{if(confirm('Reset all lessons, stitch counts, rows, and activity on this device?')){state=blank();persist();render();setView('learn');}});
-on('looksGood','click',()=>{$('reviewFeedback').textContent='Lovely. If the loop moves freely and matches the lesson, continue when ready.';eventLog('Self-check',`Looks good · ${LESSONS[state.step].short}`);});
-on('needHelp','click',()=>{$('reviewFeedback').textContent=LESSONS[state.step].tip;eventLog('Asked for a tip',LESSONS[state.step].short);});
+function selfCheck(kind){const good=kind==='looks-good';$('reviewFeedback').textContent=good?'Lovely. If the loop moves freely and matches the lesson, continue when ready.':LESSONS[state.step].tip;eventLog(good?'Self-check':'Asked for a tip',good?`Looks good · ${LESSONS[state.step].short}`:LESSONS[state.step].short);return $('reviewFeedback').textContent;}
+on('looksGood','click',()=>selfCheck('looks-good'));
+on('needHelp','click',()=>selfCheck('need-tip'));
 on('cameraButton','click',async()=>{if(cameraStream)stopCamera();else await startCamera();});on('flipCameraButton','click',async()=>{facing=facing==='environment'?'user':'environment';stopCamera();await startCamera();});on('visionButton','click',async()=>{if(tracking){tracking=false;stopTracking();$('visionButton').textContent='Enable hand landmarks ↗';$('visionStatus').textContent='Hand landmark overlay off. Camera stays on.';}else await enableTracking();});
 on('viewerResetButton','click',()=>{yaw=-.23;pitch=.13;zoom=1;drawDiagram();});on('viewerPlayButton','click',()=>{modelPlaying=!modelPlaying;$('viewerPlayButton').textContent=modelPlaying?'Ⅱ':'▶';$('viewerPlayButton').title=modelPlaying?'Pause illustration motion':'Play illustration motion';if(modelPlaying)lastFrame=performance.now();drawDiagram();});
 function about(open){modal('aboutOverlay',open);}on('aboutButton','click',()=>about(true));on('closeAbout','click',()=>about(false));on('aboutOkay','click',()=>about(false));document.addEventListener('keydown',e=>{if(e.key==='Escape'){modal('pauseOverlay',false);modal('aboutOverlay',false);}});
 window.addEventListener('pagehide',stopCamera);window.addEventListener('resize',resize);
 $('viewerPlayButton').textContent=modelPlaying?'Ⅱ':'▶';render();requestAnimationFrame(tick);
 if(state.paused){$('pauseSnapshot').textContent=`CURRENT STEP ${two(state.step+1)} · ${LESSONS[state.step].short}\n${state.chains} chains · ${state.singles} single crochets · row ${state.row}`;modal('pauseOverlay',true);}
+// Narrow read/write surface for the optional WebMCP tool layer (webmcp.js).
+window.crochetLab={
+lessons:LESSONS.map(s=>({title:s.title,short:s.short,phase:s.phase,counter:s.counter||null,target:s.target??null,time:s.time,tip:s.tip})),
+getState:()=>({step:state.step,done:[...state.done],chains:state.chains,singles:state.singles,row:state.row,rowStitches:state.rowStitches,events:state.events.map(e=>({...e})),lastSaved:state.lastSaved,paused:state.paused}),
+getView:()=>view,changeStep,count,nextRow,markNext,setView,selfCheck};
