@@ -18,3 +18,5 @@
 .viewer-playback input[type=range]{min-width:0;width:100%;margin:0;accent-color:#8f73ce}
 .viewer-playback select{min-width:0;border:1px solid var(--line);border-radius:9px;background:var(--paper2);color:var(--ink);font:500 11px 'DM Sans',system-ui,sans-serif;padding:6px 8px}
 .viewer-playback #viewerPhaseText{font-family:'DM Mono',ui-monospace,monospace;font-size:10px;letter-spacing:.03em;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* Narrow screens: the phase label keeps its own full-width line so it never ellipsizes mid-word. */
+@media(max-width:680px){.viewer-playback .playback-row:last-child #viewerPhaseText{flex:1 1 100%;order:-1;white-space:normal}}
