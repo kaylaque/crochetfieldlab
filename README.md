@@ -84,12 +84,12 @@ Connect `kaylaque/crochetfieldlab` in the Cloudflare dashboard, then use these s
 
 | Setting | Value |
 |---|---|
-| Production branch | `cf-deploy` |
+| Production branch | `cf-pages` |
 | Build command | `npm run build` |
 | Deploy command | `npx wrangler deploy` |
 | Root directory | `/` |
 
-The `cf-deploy` branch mirrors `main` and exists only to gate deployments, so ordinary commits on `main` do not trigger a build. Push or fast-forward `cf-deploy` when you want Cloudflare to deploy. The GitHub app authorizes the build; no Cloudflare token is stored in this repository. For a token-based runner instead, set `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` in that runner's secrets.
+The `cf-pages` branch mirrors `main` and exists only to gate deployments, so ordinary commits on `main` do not trigger a build. Push or fast-forward `cf-pages` when you want Cloudflare to deploy. The GitHub app authorizes the build; no Cloudflare token is stored in this repository. For a token-based runner instead, set `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` in that runner's secrets.
 
 ## Scope and architecture
 

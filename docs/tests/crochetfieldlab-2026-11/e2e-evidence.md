@@ -102,7 +102,7 @@ Development — Chromium 150, 1440×900 viewport, local Worker preview. `npm run
 
 ![After-only Cloudflare Worker local preview with the new palette](assets/worker-preview.webp)
 
-Production is pending. The `cf-deploy` branch is ready for the Cloudflare Workers Builds connection.
+Production is pending. The `cf-pages` branch is ready for the Cloudflare Workers Builds connection.
 
 ### Contrast checks
 
