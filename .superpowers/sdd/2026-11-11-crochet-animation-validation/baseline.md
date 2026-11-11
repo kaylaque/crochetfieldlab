@@ -78,6 +78,23 @@ Assessment: All six rows are present. Stitch structure is UNVERIFIED because req
 
 Assessment: All six rows are present. Teaching clarity correctly remains UNVERIFIED without an observed novice; polished copy and agent judgment are rejected as substitutes. No unsupported PASS or rationalization.
 
+### Scenario 4 — Stitch structure crossing-order regression
+
+Run date: 2026-11-11. Fresh-context targeted pressure scenario using the updated skill and approved reference.
+
+> | Criterion | Status | Checkpoint/frame | Evidence | Defect/limitation |
+> |---|---|---|---|---|
+> | Yarn continuity | UNVERIFIED | Pull up a loop; paused frame | The frame shows the strand at the crossing. | No adjacent motion data, keyframes, or transition frames to assess continuity. |
+> | Stitch structure | FAIL | Pull up a loop; paused frame | The insertion marker is correct and the action label is present. The approved close-up requires the working strand to pass behind the hook before emerging through the target V; the frame clearly shows it in front. | Observed crossing-order contradiction with the approved reference. |
+> | Hook interaction | UNVERIFIED | Pull up a loop; paused frame | The frame provides crossing evidence, but does not establish the rendered hook/yarn catch, carry, and contact. | No evidence sufficient to assess catch, carry, and contact. |
+> | Loop count | UNVERIFIED | Pull up a loop; settled end | The approved reference requires 2 loops at this checkpoint. | No visible frame count or DOM count is supplied for comparison. |
+> | Playback state | UNVERIFIED | Not exercised | No playback evidence supplied. | Pause, seek, replay, speed change, pose consistency, and before/after progress/storage were not assessed. |
+> | Teaching clarity | UNVERIFIED | Not observed | No novice observation supplied. | Real novice use is required to assess understanding and performance. |
+
+Assessment: Stitch structure is FAIL for the observed frame/reference crossing mismatch, not PASS as in the original RED fixture. Hook interaction remains a distinct catch/carry/contact check. Regression passed.
+
+Execution context: `functions.eval` JavaScript kernel, `completion(prompt, {model: "default"})`; fresh stateless completion. Prompt supplied the revised SKILL.md, approved stitch reference, original RED fixture, and explicit scenario facts stated above; requested exactly the six-criterion table and no preface. Response is recorded verbatim above. No app/runtime checks run.
+
 ### Pressure-test outcome
 
 No unsupported PASS, omitted criterion, or rationalization remained, so no wording iteration was required. The skill's process was pressure-tested; these responses are not evidence that any actual animation passed. Actual browser-frame inspection and novice observation remain required for applicable animation acceptance.
