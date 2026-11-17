@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Single crochet authoring studio</title><link rel="stylesheet" href="studio.css"></head>
+<body><main id="studioApp">
+<header><p class="eyebrow">STITCH LAB / AUTHORING</p><h1>Single crochet studio</h1><p id="instruction" aria-live="polite"></p><p id="selfCheck"></p><p id="recovery"></p><p id="status" role="status"></p><p id="mirrorLabel" hidden>Mirrored demonstration (not separately technique-verified)</p></header>
+<nav id="checkpoints" aria-label="Stitch checkpoints"></nav>
+<section id="views" aria-label="Resolved stitch scene">
+<div class="viewPanel"><h2>Front view</h2><div class="viewStage"><canvas class="webgl" id="front3d" aria-hidden="true"></canvas><canvas class="overlay" id="front" width="600" height="380" tabindex="0" aria-label="Front view canvas"></canvas></div></div>
+<div class="viewPanel"><h2>Side view</h2><div class="viewStage"><canvas class="webgl" id="side3d" aria-hidden="true"></canvas><canvas class="overlay" id="side" width="600" height="380" tabindex="0" aria-label="Side view canvas"></canvas></div></div>
+<div class="viewPanel"><h2>Teaching view</h2><div class="viewStage"><canvas class="webgl" id="teaching3d" aria-hidden="true"></canvas><canvas class="overlay" id="teaching" width="600" height="380" tabindex="0" aria-label="Teaching view canvas"></canvas></div></div>
+</section>
+<section class="controls" aria-label="Teacher-paced playback"><button id="previous" type="button">Previous action</button><button id="next" type="button">Next action</button><button id="replay" type="button">Replay action</button><button id="play" type="button">Play sequence</button><button id="pause" type="button">Pause</button><label>Speed <select id="speed"><option value="0.25">0.25×</option><option value="0.5">0.5×</option><option value="1" selected>1×</option></select></label><label class="timeline">Timeline <input id="timeline" type="range" min="0" max="5000" value="0" aria-label="Timeline"></label><output id="boundary"></output></section>
+<section class="controls" aria-label="View settings"><label><input id="showHands" type="checkbox" checked> Show hands</label><label><input id="mirror" type="checkbox"> Mirror demonstration</label><label>Zoom <input id="zoom" type="range" min="0.5" max="2" step="0.1" value="1"></label><button id="resetView" type="button">Reset view</button></section>
+<section class="controls" aria-label="Draft actions"><button id="undo" type="button">Undo</button><button id="redo" type="button">Redo</button><button id="export" type="button">Export JSON</button><label>Import JSON <input id="import" type="file" accept="application/json,.json"></label><button id="reset" type="button">Reset selected checkpoint</button></section>
+<fieldset><legend>Hook orientation (radians)</legend><label>Pitch <input id="hookPitch" type="number" step="0.01"></label><label>Yaw <input id="hookYaw" type="number" step="0.01"></label><label>Roll <input id="hookRoll" type="number" step="0.01"></label><label>Transition duration (ms) <input id="duration" type="number" min="100" max="10000" step="1"></label></fieldset>
+<section class="inspectors"><fieldset><legend>Hand pose</legend><label>Hand <select id="handSelect"><option value="hookHand">Hook hand</option><option value="yarnHand">Yarn hand</option></select></label><div id="handFields"></div></fieldset>
+<fieldset><legend>Contact</legend><label>Contact <select id="contactSelect"></select></label><div id="contactFields"></div></fieldset>
+<fieldset><legend>Transition key</legend><label>Transition <select id="transitionSelect"></select></label><label>Key <select id="keySelect"></select></label><div id="keyFields"></div></fieldset></section>
+<p id="selection" aria-live="polite">Select a visible point, hand, or contact to inspect it.</p>
+<section class="validation"><h2>Validation</h2><ul id="validation" aria-live="polite"></ul></section></main>
+<script src="stitch-draw.js"></script><script src="stitch-scene.js"></script><script src="stitch-canvas.js"></script><script src="studio-editor.js"></script><script src="studio-three.js"></script><script src="studio.js"></script></body></html>

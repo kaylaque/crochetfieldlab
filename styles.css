@@ -19,3 +19,6 @@
 .viewer-playback select{min-width:0;border:1px solid var(--line);border-radius:9px;background:var(--paper2);color:var(--ink);font:500 11px 'DM Sans',system-ui,sans-serif;padding:6px 8px}
 .viewer-playback #viewerPhaseText{font-family:'DM Mono',ui-monospace,monospace;font-size:10px;letter-spacing:.03em;color:var(--muted)}
 /* The phase label always owns a full row, so a mid-word ellipsis can never hide the phase name. */
+.single-guide{margin:6px 0;padding:10px 12px;border:2px dashed var(--ink);border-radius:10px;background:var(--paper2);font-size:14px;line-height:1.5;color:var(--ink)}
+.trouble-actions{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:9px}
+.trouble-actions button{min-width:0;border:1px solid var(--line);border-radius:8px;padding:8px;background:var(--paper2);color:var(--ink);font-size:13px;text-align:left}

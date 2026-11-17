@@ -1,0 +1,21 @@
+const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
+const callbacks=[],listeners={},elements=new Map(),learnerWrites=[];
+const ctx=new Proxy({createLinearGradient(){return {addColorStop(){}}},createRadialGradient(){return {addColorStop(){}}}},{get(t,k){return k in t?t[k]:(()=>{});}});
+function element(id){const e={id,value:'',textContent:'',innerHTML:'',children:[],hidden:false,dataset:{},attrs:{},style:{},addEventListener(type,fn){listeners[`${id}:${type}`]=fn;},setAttribute(k,v){this.attrs[k]=v;},replaceChildren(...v){this.children=v;},append(...v){this.children.push(...v);},appendChild(v){this.children.push(v);},getBoundingClientRect(){return {width:600,height:340,left:0,top:0};},getContext(){return ctx;},setPointerCapture(){}};elements.set(id,e);return e;}
+const doc={getElementById:id=>elements.get(id)||element(id),createElement:element,activeElement:null};
+const storage={getItem:k=>(k.startsWith('learner-')?null:null),setItem:(k,v)=>{learnerWrites.push(k);}};
+const sandbox={document:doc,window:{localStorage:storage,devicePixelRatio:1,matchMedia:()=>({matches:false}),addEventListener(){},StudioThree:{create(){throw new Error('WebGL test fallback');}}},localStorage:storage,matchMedia:()=>({matches:false}),devicePixelRatio:1,requestAnimationFrame:fn=>(callbacks.push(fn),callbacks.length),cancelAnimationFrame(){},setTimeout,clearTimeout,console,Math,Date,URL,Blob,confirm:()=>true};
+elements.set('handSelect',element('handSelect'));elements.get('handSelect').value='hookHand';elements.set('speed',element('speed'));elements.get('speed').value='1';
+vm.createContext(sandbox);for(const f of ['stitch-draw.js','stitch-scene.js','stitch-canvas.js','studio-editor.js','studio.js'])vm.runInContext(fs.readFileSync(f,'utf8'),sandbox,{filename:f});
+const runFrame=t=>{const fn=callbacks.shift();assert.ok(fn,'one active animation frame');fn(t);};
+elements.get('next').onclick();runFrame(1000);runFrame(2000);
+assert.match(elements.get('instruction').textContent,/Insert — 1 loop/);
+assert.equal(Number(elements.get('timeline').value),1000);
+assert.match(elements.get('status').textContent,/3D unavailable/);
+elements.get('mirror').checked=true;elements.get('mirror').onchange({target:elements.get('mirror')});
+assert.equal(elements.get('mirrorLabel').hidden,false);
+assert.deepEqual(learnerWrites,[]);
+sandbox.window.matchMedia=()=>({matches:true});sandbox.matchMedia=()=>({matches:true});vm.runInContext(fs.readFileSync('studio.js','utf8'),sandbox,{filename:'studio.js-reduced'});
+elements.get('next').onclick();assert.equal(Number(elements.get('timeline').value),1000);
+elements.get('replay').onclick();assert.equal(Number(elements.get('timeline').value),0);runFrame(3000);runFrame(4000);assert.equal(Number(elements.get('timeline').value),1000);
+console.log('PASS: Next action settles exactly, explicit WebGL failure is visible, and playback leaves storage untouched.');

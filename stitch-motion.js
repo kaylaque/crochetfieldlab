@@ -24,11 +24,36 @@ const chainPoses = [
   pose(P(), P([-1.8, -.55, 0], [.15, .2, .25], [.55, -.15, .3]), P([-.35, .05, .1], [.05, .35, .1], [.45, .05, .1]), H(.55, -.15, -.35)),
   pose(P(), P([-1.8, -.55, 0], [.15, .2, .2], [.55, -.15, .25]), P([-.3, .05, .1], [.05, .4, .15], [.4, .05, .15]), H(.65, -.05, -.3))
 ];
+// An open loop hangs from the hook shaft. The spare points in a one-loop pose
+// remain on its endpoint; after pull-up they separate into a second loop.
+const oneHookLoop = (x, y, z) => {
+  const loop = P([x - .12, y + .06, z], [x - .17, y - .02, z], [x - .17, y - .12, z], [x, y - .23, z], [x + .17, y - .12, z], [x + .17, y - .02, z], [x + .12, y + .06, z]);
+  return P(...loop, ...Array.from({ length: 8 }, () => [...loop[6]]));
+};
+const twoHookLoops = (x1, x2, y, z) => {
+  const first = P([x1 - .12, y + .06, z], [x1 - .17, y - .02, z], [x1 - .17, y - .12, z], [x1, y - .23, z], [x1 + .17, y - .12, z], [x1 + .17, y - .02, z], [x1 + .12, y + .06, z]);
+  const second = P([x2 - .12, y + .06, z + .04], [x2 - .17, y - .02, z + .04], [x2 - .17, y - .12, z + .04], [x2, y - .23, z + .04], [x2 + .17, y - .12, z + .04], [x2 + .17, y - .02, z + .04], [x2 + .12, y + .06, z + .04]);
+  return P(...first, [(x1 + x2) / 2, y + .06, z], ...second);
+};
+
+// Six connected poses for one US single crochet. The hook tip reaches the
+// second-from-right V at (.88, -.28, .22) on insertion; each pulled loop stays
+// attached to the working strand that returns to the yarn supply.
+const singlePoses = [
+  pose(P(), P([.88, -.28, .22], [.74, -.12, .22], [1.48, .38, .08], [2.5, .62, 0]), oneHookLoop(.42, -.02, .2), H(-.04, .04, -.3, .7)),
+  pose(P(), P([.88, -.28, .22], [.75, -.15, .22], [1.42, .34, .08], [2.5, .62, 0]), oneHookLoop(.42, -.02, .2), H(.1, -.2, -.2, .7)),
+  pose(P(), P([.88, -.28, .22], [.82, -.04, .24], [1.38, .5, .12], [2.5, .62, 0]), oneHookLoop(.42, -.02, .2), H(.14, -.08, .18, .7)),
+  pose(P(), P([.82, -.27, .22], [.83, -.04, .24], [1.42, .47, .12], [2.5, .62, 0]), twoHookLoops(.56, .9, -.02, .2), H(.34, .12, -.28, .72)),
+  pose(P(), P([.82, -.27, .22], [.72, .16, .3], [1.4, .48, .12], [2.5, .62, 0]), twoHookLoops(.56, .9, -.02, .2), H(.38, .1, .12, .72)),
+  pose(P(), P([.82, -.27, .22], [.78, .02, .24], [1.44, .43, .1], [2.5, .62, 0]), oneHookLoop(.72, -.02, .2), H(.18, .06, -.42, .72))
+];
 
 const PHASE_NAMES = {
   knot: ['Lay yarn', 'Cross to form a loop', 'Pull a bight through', 'Place loop on hook', 'Tighten the sliding knot'],
-  chain: ['One loop on hook', 'Yarn over', 'Pull through', 'New chain V']
+  chain: ['One loop on hook', 'Yarn over', 'Pull through', 'New chain V'],
+  single: ['Insert', 'Yarn over', 'Pull up a loop', 'Yarn over again', 'Pull through both']
 };
+
 
 // Keyframes outnumber phases by one: phase i animates poses[i] into poses[i + 1].
 const makeMotion = (name, poses) => {
@@ -95,9 +120,10 @@ function validateMotion(motion) {
   });
 }
 
-const KNOT_MOTION = makeMotion('knot', knotPoses), CHAIN_MOTION = makeMotion('chain', chainPoses);
+const KNOT_MOTION = makeMotion('knot', knotPoses), CHAIN_MOTION = makeMotion('chain', chainPoses), SINGLE_MOTION = makeMotion('single', singlePoses);
 validateMotion(KNOT_MOTION);
 validateMotion(CHAIN_MOTION);
+validateMotion(SINGLE_MOTION);
 
 const lerp = (a, b, t) => a + (b - a) * t;
 // Ease across the first 82% of a phase, then hold, so each operation settles before the next.
@@ -134,5 +160,5 @@ function mirrorPose(p) {
   };
 }
 
-window.StitchMotion = { KNOT_MOTION, CHAIN_MOTION, sampleMotion, mirrorPose, phaseAt };
+window.StitchMotion = { KNOT_MOTION, CHAIN_MOTION, SINGLE_MOTION, sampleMotion, mirrorPose, phaseAt };
 })();

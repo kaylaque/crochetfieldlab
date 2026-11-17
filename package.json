@@ -13,6 +13,10 @@
     "deploy:dry": "npm run build && wrangler deploy --dry-run"
   },
   "devDependencies": {
+    "esbuild": "0.25.12",
     "wrangler": "4.159.0"
+  },
+  "dependencies": {
+    "three": "0.180.0"
   }
 }

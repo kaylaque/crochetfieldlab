@@ -54,9 +54,9 @@ Shape & spacing:
 
 `TopBar` • `CourseProgress` • `LessonRail` • `LessonHeading` • `StitchStage` • `PlaybackBar` • `HandednessSelect` • `NextMove` • `CountControl` • `LiveCamera` • `HandLandmarkOverlay` • `SelfReview` • `TutorialDeepLink` • `Journal` • `PauseModal`.
 
-## Guided stitch motion (lessons 2, 4, 5)
+## Guided stitch motion (lessons 2, 4, 5, and 6)
 
-Only the slip-knot lesson (step 2) and the two chain lessons (steps 4 and 5) animate. The other five lessons keep their static illustrations and expose no play/pause button, scrubber, phase buttons, handedness control, or speed control.
+Lessons 2, 4, 5, and 6 animate. The remaining four lessons keep their static illustrations and expose no playback controls.
 
 **Phase labels.** Knot: `Lay yarn` → `Cross to form a loop` → `Pull a bight through` → `Place loop on hook` → `Tighten the sliding knot`. Chain: `One loop on hook` → `Yarn over` → `Pull through` → `New chain V`. The phase name is discrete — it changes only at a phase boundary, never once per frame — and it owns a full-width row of the playback panel so it never ellipsizes, verified from 320 px to 1440 px.
 
@@ -64,13 +64,17 @@ Only the slip-knot lesson (step 2) and the two chain lessons (steps 4 and 5) ani
 
 **Settle poses.** Inside each phase the pose eases over the first 82% and holds its end pose for the remaining 18%, so pausing or stepping to a boundary always lands on a rest pose rather than a blur. The last keyframe of a phase is the first keyframe of the next, so phases chain without a jump.
 
+**Single crochet.** Lesson 6 has five connected actions: `Insert` → `Yarn over` → `Pull up a loop` → `Yarn over again` → `Pull through both`. Its settled loop count is 1, 1, 2, 2, 1; phase controls land on the settled pose. The fixed seven-V example is independent of saved chain counts. A dashed outline and label identify the second V, and the DOM guide repeats the current instruction and expected count. Playback, seeking, and mirroring do not alter progress; only the learner's `+ Stitch` action counts.
+
+**Recovery and camera.** Lesson 6 offers learner-selected recovery tips for tight tension, finding the next stitch, extra stitches, and dropped loops. They are instructions, not detected errors. The camera preview and controls stay in the practice sidebar; the preview is off until explicitly enabled. Hand landmarks are a separate opt-in and never verify stitch correctness. Turning off the camera stops any active tracking.
+
 **Warm/cool yarn.** Front-facing yarn uses warm blush `#ec9cad`; the strand the current phase is teaching uses the lighter `#ffc8d0`. A cooler mauve `#b987a6` pass offset down the model's y axis reads as the shaded underside, and a narrow white highlight follows the centre line. The active strand never turns blue: blue metal belongs to the hook alone.
 
 **Consistent ink.** Strands and both hook segments are outlined in ink `#3b3355` before their fill, with round caps and joins and a width that scales with canvas height and zoom. The contour is a single stroke — no second shell pass, no hatching, no tonal falloff.
 
 **Continuous strands.** A pose holds three paths: tail, working, and the active bight or loop. Each path is one continuous Catmull-Rom strand sampled from 3D control points, so a bight that appears during a phase is connected to the working side instead of being a floating loop. A path whose points collapse to one place draws nothing, so a strand that has not appeared yet is simply absent.
 
-**Crossing depth.** Paths are stroked in the declared order `tail → working → active` from 3D points whose z offsets place them in front of or behind one another, so a bight pulled through the old loop reads on top of it while the first loop reads as passing behind. The hook sits at z ≈ 0.4 and is drawn last, so yarn passes behind the metal. There is no per-pixel depth buffer, and the illustration does not claim one.
+**Crossing depth.** Paths are stroked in the declared order `tail → working → active` from 3D points whose z offsets place them in front of or behind one another, so a bight pulled through the old loop reads on top of it while the first loop reads as passing behind. The hook sits at z ≈ 0.4 and is drawn before those yarn paths, so a loop remains continuous where it drapes over the metal instead of being severed by the shaft. Counted chain Vs remain behind both. There is no per-pixel depth buffer, and the illustration does not claim one.
 
 **Mirror mode.** `Left-handed · mirrored` reflects the x coordinate of every pose point and negates the hook's angle, so hook travel, crossings, and loop direction all mirror without a second motion definition. It is viewer memory for the session: it survives lesson changes, is never written to progress or `localStorage`, and never changes counts or the journal. Reset restores the front angle and zoom but leaves handedness and the playhead alone.
 

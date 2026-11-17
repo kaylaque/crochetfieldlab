@@ -4,7 +4,7 @@ let path=[],style='';
 const gradient={addColorStop(){}};
 const ctx=new Proxy({createLinearGradient(){return gradient},createRadialGradient(){return gradient},beginPath(){calls.push('begin');path=[]},moveTo(x,y){calls.push('move');path.push([x,y])},lineTo(x,y){calls.push('line');path.push([x,y])},stroke(){calls.push('stroke');strokes.push({style,points:path.slice()})},fillText(t){calls.push(['text',t])},save(){},restore(){},translate(){},clearRect(){},fillRect(){},arc(){},fill(){},ellipse(){},roundRect(){}},{set(o,k,v){o[k]=v;if(k==='strokeStyle')style=v;return true}});
 const sandbox={window:{}};vm.createContext(sandbox);
-for(const f of ['stitch-motion.js','stitch-renderer.js'])vm.runInContext(fs.readFileSync(f,'utf8'),sandbox);
+for(const f of ['stitch-motion.js','stitch-draw.js','stitch-renderer.js'])vm.runInContext(fs.readFileSync(f,'utf8'),sandbox);
 const base={motion:sandbox.window.StitchMotion.CHAIN_MOTION,playheadMs:6000,yaw:-.23,pitch:.13,zoom:1,mirror:false,width:620,height:385,dpr:1};
 const YARN=new Set(['#ec9cad','#ffc8d0','#b987a6']);
 function draw(extra){
@@ -25,12 +25,23 @@ const span=(values)=>Math.max(...values)-Math.min(...values);
 let run=draw({completedCount:0});
 assert.equal(run.result.visibleCompletedVs,0);
 assertInBuffer('chain end',run.snapshot);
+assert.deepEqual(run.snapshot.slice(0,6).map(s=>s.style),['#3b3355','#c9ddf5','#f1f7ff','#3b3355','#c9ddf5','#f1f7ff']);
+const hookStart=run.snapshot[0].points[0];
+assert.ok(Math.abs(hookStart[0]-285.443)<.01&&Math.abs(hookStart[1]-174.813)<.01,`learner projection baseline changed: ${hookStart}`);
 const plainYarn=yarnPoints(run.snapshot);
 assert.ok(plainYarn.length>=8,`expected yarn passes to draw geometry, got ${plainYarn.length} points`);
 assert.ok(run.snapshot.some(s=>s.style==='#3b3355'),'ink outline must be stroked');
 assert.ok(run.snapshot.some(s=>s.style==='#b987a6'),'underside pass must be stroked');
 assert.ok(run.snapshot.some(s=>s.style.startsWith('rgba(255,255,255')),'highlight pass must be stroked');
 assert.ok(span(plainYarn.map(p=>p[0]))>60,`yarn must span a visible width, got ${span(plainYarn.map(p=>p[0]))}px`);
+// Lesson 6's example foundation is fixed at seven Vs and does not become learner progress.
+const singleBase={...base,motion:sandbox.window.StitchMotion.SINGLE_MOTION};
+const plainStrokes=strokes.length;
+sandbox.window.StitchRenderer.render(ctx,{...singleBase,completedCount:0});
+const noFoundationStrokes=strokes.length;
+const singleFoundation=sandbox.window.StitchRenderer.render(ctx,{...singleBase,completedCount:0,illustrativeFoundation:true});
+assert.equal(singleFoundation.visibleCompletedVs,0,'illustrative Vs must not be reported as counted progress');
+assert.equal(strokes.length-noFoundationStrokes-(noFoundationStrokes-plainStrokes),21,'the fixed seven-V foundation adds seven Vs in three passes each');
 assert.ok(span(plainYarn.map(p=>p[1]))>20,`yarn must span a visible height, got ${span(plainYarn.map(p=>p[1]))}px`);
 
 run=draw({completedCount:11});

@@ -20,12 +20,13 @@ Open `http://localhost:8000/`. For camera access from a phone, deploy over HTTPS
 ## What works today
 
 - **Guided course:** eight steps from tools and slip knot through foundation chain, single crochet, rows, and fastening off.
-- **Illustrative stitch view:** rotatable and zoomable canvas scenes drawn from 3D coordinates. Lessons 2, 4, and 5 play a lesson-local stitch timeline with play/pause, a scrubber, previous/next phase buttons, 0.25×/0.5×/1× speed, front/top/side/free angle presets, and a right/left-handed mirror; the knot lesson has five named phases and the chain lessons four, each settling on its end pose before the next. The other five lessons stay explanatory static scenes and show no playback controls. These are explanatory illustrations, not physically accurate crochet simulations or models generated from camera input.
-- **Camera practice:** on-device preview with front/back switch, plus an opt-in MediaPipe Hand Landmarker overlay that reports whether hands are in frame. Model and WebAssembly assets load from an external CDN only when enabled.
-- **Manual tracking:** foundation-chain and single-crochet counters, undo, row number and next-row control, lesson check-offs, self-check and tips, and an activity journal.
+- **Illustrative stitch view:** rotatable and zoomable canvas scenes drawn from 3D coordinates. Lessons 2, 4, 5, and 6 play a lesson-local timeline with play/pause, a scrubber, previous/next phase buttons, 0.25×/0.5×/1× speed, angle presets, and a right/left-handed mirror. Single crochet teaches five named actions with settled 1/1/2/2/1 loop guidance shown in both the canvas and DOM; seeking never changes learner progress.
+- **Camera practice:** the camera preview and controls stay in the right practice column; the preview starts only after explicit opt-in. Optional hand landmarks require a separate action and report framing only, never stitch correctness; stopping the camera also stops tracking.
+- **Manual tracking:** foundation-chain and single-crochet counters change only through the learner's `+ Stitch` action (with undo), with row controls, troubleshooting guidance, lesson check-offs, and an activity journal.
 - **Persistence:** pause, resume, and automatic `localStorage` saves in the same browser profile. No cross-device sync.
 - **Agent tools:** eight optional WebMCP tools over the same lesson actions. See [Optional WebMCP tools](#optional-webmcp-tools).
 - **Responsive UI:** phone layout, keyboard rotation for the stitch view, reduced-motion handling, and chapter links to the source tutorial.
+- **Single-crochet authoring studio:** run `npm run build`, then serve `dist/` (`python3 -m http.server 8000 --directory dist`) and open `/studio.html`. It provides front, side, and teaching WebGL views, six checkpoints, hand/contact/key inspectors, v1 draft recovery, and teacher-paced playback. The draft is studio-only; practitioner technique approval and novice comprehension remain unverified.
 
 No automatic stitch counting, stitch-correctness detection, hook position detection, or yarn tracking exists.
 
@@ -169,7 +170,7 @@ The vendored polyfill is the package's standalone `dist/polyfill.js`. Replace th
 
 ## Deploy to Cloudflare Workers
 
-The site deploys as a static-assets-only Worker. `npm run build` copies `index.html`, `styles.css`, `app.js`, `stitch-motion.js`, `stitch-renderer.js`, `webmcp.js`, and `vendor/` into `dist/`; `wrangler.toml` serves that directory.
+The site deploys as a static-assets-only Worker. `npm run build` copies the learner and studio files into `dist/` and creates the local `studio-three.js` bundle from pinned Three.js and esbuild dependencies; no runtime CDN is used. `wrangler.toml` serves that directory.
 
 One-time local setup:
 
