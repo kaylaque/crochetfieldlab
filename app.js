@@ -107,6 +107,8 @@ on('viewerResetButton','click',()=>{[yaw,pitch]=ANGLE_PRESETS.front;zoom=1;$('vi
 function about(open){modal('aboutOverlay',open);}on('aboutButton','click',()=>about(true));on('closeAbout','click',()=>about(false));on('aboutOkay','click',()=>about(false));document.addEventListener('keydown',e=>{if(e.key==='Escape'){modal('pauseOverlay',false);modal('aboutOverlay',false);}});
 window.addEventListener('pagehide',stopCamera);window.addEventListener('resize',()=>{resize();drawDiagram();});
 $('viewerPlayButton').textContent=modelPlaying?'Ⅱ':'▶';render();requestAnimationFrame(tick);
+// Workshop page links here with #journal to open the progress journal directly.
+if(globalThis.location?.hash==='#journal')setView('journal');
 if(state.paused){$('pauseSnapshot').textContent=`CURRENT STEP ${two(state.step+1)} · ${LESSONS[state.step].short}\n${state.chains} chains · ${state.singles} single crochets · row ${state.row}`;modal('pauseOverlay',true);}
 // Narrow read/write surface for the optional WebMCP tool layer (webmcp.js).
 window.crochetLab={
