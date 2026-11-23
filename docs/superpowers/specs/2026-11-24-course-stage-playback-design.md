@@ -1,44 +1,35 @@
-# Playback for every course lesson
+# Video playback for every course lesson
 
 ## Purpose
 
-A beginner with no crochet experience can follow, pause, and repeat each action in all eight main-course lessons. A learner using the lab as a journey tracker can return to each demonstration without losing their place. This builds on the current `main` course and its existing knot-and-chain playback, not on the older branch as a replacement.
+A beginner with no crochet experience can watch, pause, and repeat the relevant part of a real-hand tutorial for each of the eight main-course lessons. A learner using the lab as a journey tracker can return to a lesson without losing their video position. Build on current `main`; the older playback branch is inspiration, not a replacement.
 
-## Experience
+## Learner experience
 
-Each lesson provides a distinct, meaningful illustrated sequence and beginner-friendly phase labels. The existing viewer supplies play/pause, a scrubber, previous and next phase, playback speed, viewing angle, and handedness controls. Navigation stays within the current lesson; the existing course controls navigate between lessons. Restart returns the demonstration to its beginning without changing course progress.
+Embed the existing [beginner tutorial](https://www.youtube.com/watch?v=aAxGTnVNJiE) in the main-course lesson view. Each lesson opens at its relevant point in the video. Provide play and pause, seeking, previous and next instructional phase, and restart; phase labels explain unfamiliar terms in beginner-friendly language. The existing course navigation continues to move between lessons. Preserve the existing illustrated stitch viewer as a complementary aid, including its current controls and behavior; this project does not require new illustrations or animations.
 
-The sequences cover:
+The eight lessons cover materials, slip knot, grip, chain motion, foundation chain, single crochet, rows, and finishing. The README documents six broad chapter timestamps, not a complete eight-lesson transcript. Before implementation, inspect the actual tutorial and record verified start, end, and instructional phase timestamps for each lesson. Reuse a relevant segment where lessons overlap. Do not invent timestamps or imply that a technique appears in the video unless verified. Keep lessons useful through their existing written instructions even if the tutorial does not cover a particular action.
 
-1. Materials: identify the hook, yarn, scissors, and needle and prepare a working space.
-2. Slip knot: form a loop, pull through a bight, place it on the hook, and adjust it.
-3. Grip: position hook and yarn in the hands and show relaxed tension.
-4. Chain motion: yarn over, turn the hook, and pull through the existing loop.
-5. Foundation chain: repeat the chain movement and show how to identify completed V shapes without counting the loop on the hook.
-6. Single crochet: insert into the second chain, yarn over, pull up a loop, yarn over, and pull through both loops.
-7. Rows: work across, chain one, turn, and start the next row.
-8. Finish: leave a tail, fasten off, and weave the tail through the fabric.
+Playback starts paused on entry, including when restoring a saved position. Previous and next phase navigate within the lesson's verified segment; restart returns to its beginning. Seeking and end-of-segment behavior must not silently mark a lesson complete or advance the course. Follow reduced-motion preferences and provide keyboard-accessible controls and an accessible player title. Do not copy or rehost the video.
 
-Use simple language and explain unfamiliar terms in concise phase guidance. The sequences are original instructional illustrations, not physically exact simulations or proof that a learner performed a stitch correctly. Right- and left-handed views should remain understandable for each sequence. Reduced-motion preferences start playback paused, with all phases still reachable manually.
-
-The existing external beginner tutorial remains an optional real-hand reference. Link to the relevant available chapter timestamps already documented in the README; do not copy or rehost its footage. The eight lessons are an app curriculum rather than a transcript, so reuse a relevant chapter when there is no separate timestamp. The course remains usable if the external video is unavailable.
+If the player cannot load or embedding is unavailable, show an actionable direct link to the relevant tutorial chapter. Existing instructions, illustrations, and manual tracking remain usable without YouTube. Loading the embed contacts YouTube; explain this clearly before the player loads and allow the learner to choose whether to load it.
 
 ## Architecture and state
 
-Extend the existing lesson manifest, `stitch-motion.js` pose sampling, and `stitch-renderer.js` rendering instead of introducing a second playback engine. Define phase labels and visual poses for each lesson, preserving the established timeline controls and rendering conventions. Each phase must have a visually meaningful pose or transition; static repeated frames with different labels do not satisfy this design. Keep the model explanatory rather than promising physical accuracy.
+Add a lesson-to-video mapping to the existing course data: stable lesson identifier, verified segment bounds, and verified phase timestamps and labels. Use the YouTube embedded player API to control playback and seek to those positions. Manage player readiness and errors explicitly: do not offer functioning-looking custom playback controls until the player is ready; provide the direct chapter link on failure. Clean up or reuse the player safely across lesson changes. Preserve the existing stitch-motion and renderer implementations.
 
-Store normalized playback position separately for each lesson in browser local storage, using stable lesson identifiers and defaulting missing or invalid positions to the start. Restore a lesson's saved position paused when entering it or reloading; a new lesson likewise starts paused. User-initiated play starts from the restored position. Record positions on meaningful changes such as scrubbing, phase stepping, pausing, leaving a lesson, and page hiding; avoid writing on every animation frame. Playback remains usable if storage is unavailable, and the interface reports that the position could not be saved.
+Store video position separately for each lesson in browser local storage, using stable lesson identifiers. Save on meaningful changes, including pausing, seeking, phase navigation, lesson changes, and page hiding, without writing on every animation frame. Treat absent, invalid, and out-of-segment values as the lesson start. Restore the saved position paused. Playback remains usable if storage is unavailable; indicate that the position could not be saved. Storage is local to the browser profile, not synced across devices.
 
-Playback state must not change lesson completion, stitch or row counts, journal entries, or existing progress. Manual course actions continue to own those values. Existing saved course data must remain readable; no migration should erase or reset it. Playback state is local to the same browser profile, not synced across devices.
+Playback must not change lesson completion, stitch or row counts, journal entries, or existing course progress. Manual course actions continue to own those values. Existing saved course data must remain readable; do not erase or reset it.
 
 ## Testing and acceptance
 
-- Exercise all eight lessons: play and pause, move both directions through phases, scrub, change speed, restart, and switch lessons. Confirm that phase labels and visible illustrations correspond to the described actions.
-- Verify per-lesson positions survive reload and navigation, reopen paused, and fall back safely for missing or invalid saved values. Verify an unavailable storage path leaves playback usable and reports the failure.
-- Verify playback controls do not change counts, completed lessons, rows, or journal events; existing manual controls still work and prior saved progress remains intact.
-- Exercise keyboard controls, reduced motion, handedness, viewing angles, and responsive layout. Inspect each demonstration in a browser, including a narrow viewport.
-- Run the existing focused motion, renderer, and course smoke tests plus the static build. Update course documentation to describe the new behavior and its limitations.
+- Inspect the tutorial and document evidence for every lesson segment and phase timestamp. Exercise all eight lessons in a real browser, checking that each selection seeks to the intended action.
+- Verify player readiness, play/pause, seeking, phase navigation, restart, segment boundaries, lesson switching, and direct-link fallback on player failure. Confirm the user is informed before the embed contacts YouTube.
+- Verify per-lesson positions survive reload and navigation, reopen paused, and handle invalid data and unavailable storage. Confirm playback never alters completion, counts, rows, or journal entries; existing manual controls and saved progress remain intact.
+- Exercise keyboard access, reduced motion, responsive layout, and existing illustrated viewer controls. Inspect desktop and narrow viewports.
+- Run the existing relevant smoke tests and static build. Update course documentation to describe video playback, third-party requests, and limitations.
 
 ## Out of scope
 
-Automatic stitch recognition or counting, camera-based correctness judgments, cross-device synchronization, hosting tutorial footage, and changes to the separate workshop page.
+New animated illustrations for every lesson, automatic stitch recognition or counting, camera-based correctness judgments, cross-device synchronization, hosting tutorial footage, and changes to the separate workshop page.
