@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="workshop.css" />
+  <link rel="stylesheet" href="workshop.css?v=7" />
 </head>
 <body>
   <!-- WELCOME -->
@@ -170,6 +170,66 @@
     <div class="bricks" aria-hidden="true"></div>
   </section>
 
+  <!-- FINISH -->
+  <section id="finishScreen" class="screen finish" hidden aria-labelledby="finishTitle">
+    <div class="finish-inner">
+      <div class="stars" aria-hidden="true"><i></i><i class="pink"></i><i></i></div>
+      <p class="kicker light">SEMUA LEVEL CLEAR · <span id="finishName">PLAYER</span></p>
+      <h1 id="finishTitle" class="pop">SEPUH!</h1>
+      <p class="finish-msg">Waw, kamu sudah sepuh dan siap lanjut ke workshop yang lebih advance!! Selamat🤩</p>
+      <div class="card finish-stats">
+        <div><span class="hud-label dark">LEVEL CLEAR</span><span class="stat-num">6 / 6</span></div>
+        <div><span class="hud-label dark">CHAIN</span><span id="finishChains" class="stat-num">0</span></div>
+      </div>
+      <div class="row center">
+        <button id="replayButton" type="button" class="btn btn-light big">↺ ULANGI PERMAINAN</button>
+        <button id="boothOpenButton" type="button" class="btn btn-gold big">SHARE PROGRES ▶</button>
+      </div>
+    </div>
+    <div class="bricks" aria-hidden="true"></div>
+  </section>
+
+  <!-- PHOTO BOOTH -->
+  <section id="boothScreen" class="screen booth" hidden aria-labelledby="boothTitle">
+    <header class="hud">
+      <h1 id="boothTitle" class="booth-title">PHOTO BOOTH</h1>
+      <span class="logo">crochet<span class="accent-soft">.py</span></span>
+    </header>
+    <main class="booth-main">
+      <div class="booth-frame">
+        <video id="boothVideo" autoplay muted playsinline hidden></video>
+        <canvas id="boothCanvas" aria-label="Pratinjau foto dengan bingkai crochet.py"></canvas>
+        <img id="boothPhoto" alt="Foto kamu dengan bingkai crochet.py" hidden />
+        <div id="boothFlash" class="booth-flash" hidden></div>
+        <span id="boothCount" class="booth-count" hidden></span>
+      </div>
+      <div class="booth-side">
+        <p id="boothStatus" class="booth-status" aria-live="polite"></p>
+        <div id="boothBefore" class="booth-actions">
+          <button id="shootButton" type="button" class="btn btn-gold big">📸 AMBIL FOTO</button>
+          <button id="boothFlip" type="button" class="btn btn-light" aria-pressed="false">⇋ FLIP KAMERA</button>
+          <fieldset class="filters">
+            <legend>FILTER</legend>
+            <label class="choice"><input type="radio" name="filter" value="normal" /> NORMAL</label>
+            <label class="choice"><input type="radio" name="filter" value="cerah" checked /> CERAH</label>
+            <label class="choice"><input type="radio" name="filter" value="glow" /> SOFT GLOW</label>
+            <label class="choice"><input type="radio" name="filter" value="pink" /> PINKY</label>
+            <label class="choice"><input type="radio" name="filter" value="retro" /> RETRO</label>
+          </fieldset>
+        </div>
+        <div id="boothAfter" class="booth-actions" hidden>
+          <p class="tag-hint">Upload fotomu &amp; jangan lupa tag <b>@pyladies.yk</b> ya! 🧶</p>
+          <div class="row">
+            <button id="downloadButton" type="button" class="btn btn-gold">⬇ DOWNLOAD</button>
+            <button id="retakeButton" type="button" class="btn btn-light">FOTO ULANG</button>
+          </div>
+        </div>
+        <button id="boothBack" type="button" class="btn btn-light">◀ KEMBALI</button>
+      </div>
+    </main>
+    <div class="bricks" aria-hidden="true"></div>
+  </section>
+
   <!-- LEVEL UP -->
   <div id="levelUp" class="levelup" hidden role="dialog" aria-modal="true" aria-labelledby="levelUpTitle">
     <div class="levelup-inner">
@@ -181,6 +241,6 @@
   </div>
 
   <script src="course-video.js"></script>
-  <script src="workshop.js" type="module"></script>
+  <script src="workshop.js?v=7" type="module"></script>
 </body>
 </html>
