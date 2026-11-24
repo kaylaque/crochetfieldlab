@@ -1,8 +1,8 @@
 # Crochet Field Lab 🧶
 
-A browser-based beginner crochet course with guided steps, an optional tutorial video, an on-device camera, optional hand landmarks, manual stitch tracking, and local progress. This repository is a working prototype, not a finished computer-vision tutor.
+Crochet Field Lab is a beginner-friendly crochet and coding experiment by PyLadies Yogyakarta. The home page introduces the project; `workshop.html` is the interactive crochet.py workshop with camera-assisted hand positioning, tutorial playback and manual chain counting.
 
-Follow a step, watch the tutorial, practice in front of the camera, count stitches, and keep your place. Automatic stitch recognition and AI correctness feedback remain research work.
+The earlier self-guided course remains available at `course.html`. Neither experience automatically verifies crochet stitches.
 
 ## Quick start
 
@@ -15,15 +15,15 @@ python3 -m http.server 8000
 npm test
 ```
 
-Open `http://localhost:8000/`. For camera access from a phone, deploy over HTTPS first; a plain `http://<LAN-IP>` page may be refused by the browser.
+Open `http://localhost:8000/` for the project profile, then choose **Mulai workshop**. The earlier self-guided course is at `http://localhost:8000/course.html`. For camera access from a phone, deploy over HTTPS first; a plain `http://<LAN-IP>` page may be refused by the browser.
 
 ## What works today
 
-- **Guided course:** eight steps from tools and slip knot through foundation chain, single crochet, rows, and fastening off.
-- **Tutorial video:** each lesson links to its relevant part of simplydaisy's original video. Select **Load video** to contact YouTube and load its player; no YouTube resources are requested before that choice. Play, pause, speed, and seeking are provided by YouTube; phase buttons and restart stay within the lesson. While playing, segment bounds are checked every 250 ms, not enforced sample-accurately. The direct timestamped link remains available if the player fails.
+- **Workshop:** six levels retain the camera, hand-position checks, three-second hold, coach confirmation, Python rules editor and manual chain counter. The first level checks camera framing and offers a materials video; the remaining levels show the corresponding tutorial segment in **Tiru Tangan Ini**.
+- **Tutorial video:** select **Muat video** to contact YouTube and load its player; no YouTube resources are requested before that choice. Use YouTube controls for play, pause, speed and seeking, and the lesson controls for phases and restart. Positions are saved separately by lesson. The direct timestamped link remains available if the player fails. Segment bounds are checked every 250 ms during playback, not enforced sample-accurately.
 - **Camera practice:** on-device preview with front/back switch, plus an opt-in MediaPipe Hand Landmarker overlay that reports whether hands are in frame. Model and WebAssembly assets load from an external CDN only when enabled.
 - **Manual tracking:** foundation-chain and single-crochet counters, undo, row number and next-row control, lesson check-offs, self-check and tips, and an activity journal.
-- **Persistence:** course progress and each lesson's video position are saved separately in `localStorage` in the same browser profile. A new page requires loading the video again and starts paused. Playback does not count stitches or complete lessons; resetting all progress clears video positions too. No cross-device sync.
+- **Persistence:** workshop progress, course progress and each lesson's video position are saved locally in the same browser profile. A new page requires loading the video again and starts paused. Playback does not count stitches or complete lessons. Resetting the self-guided course clears video positions; resetting workshop levels keeps chain counts and video positions. No cross-device sync.
 - **Agent tools:** eight optional WebMCP tools over the same lesson actions. See [Optional WebMCP tools](#optional-webmcp-tools).
 - **Responsive UI:** phone layout, keyboard-accessible phase controls, reduced-motion handling, and chapter links to the source tutorial.
 
@@ -126,8 +126,9 @@ Browser agent ─────► document.modelContext ► webmcp.js ──► s
 
 ## Files
 
-- `index.html` — semantic layout
-- `styles.css` — design tokens and responsive UI; Google Fonts are optional
+- `index.html` and `profile.css` — project and PyLadies Yogyakarta profile
+- `workshop.html`, `workshop.css`, `workshop.js` — workshop flow, hand detection, guide and journal
+- `course.html` and `styles.css` — earlier self-guided course
 - `app.js` — lesson content, progress, camera, optional hand landmarks
 - `course-video.js` — consent-gated YouTube player, verified lesson segments and separate video positions
 - `webmcp.js` — optional WebMCP tool definitions built on the same app actions
@@ -165,7 +166,7 @@ The vendored polyfill is the package's standalone `dist/polyfill.js`. Replace th
 
 ## Deploy to Cloudflare Workers
 
-The site deploys as a static-assets-only Worker. `npm run build` copies `index.html`, `styles.css`, `app.js`, `course-video.js`, `webmcp.js`, and `vendor/` into `dist/`; `wrangler.toml` serves that directory.
+The site deploys as a static-assets-only Worker. `npm run build` copies the profile, workshop, course, player, vendor scripts and workshop assets into `dist/`; `wrangler.toml` serves that directory.
 
 One-time local setup:
 

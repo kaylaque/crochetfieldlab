@@ -132,3 +132,16 @@ textarea.code{min-height:150px}
   .level-list{flex-direction:row;overflow-x:auto;padding-bottom:8px}
   .level{min-width:190px}
 }
+
+/* Tutorial uses the same opt-in player as the course, inside the coach guide. */
+#workshopVideoControls{min-width:0}
+.guide-video:not(:empty){width:100%;aspect-ratio:16/9;min-height:200px;background:#3b2433;border:3px solid var(--ink);overflow:hidden}
+.guide-video iframe{display:block;width:100%;height:100%;border:0}
+#workshopVideoControls .hint{margin:10px 0;overflow-wrap:anywhere}
+.video-controls{display:flex;flex-wrap:wrap;gap:8px}
+.video-controls .btn{flex:1 1 auto;padding:8px;font-size:8px}
+.video-load{font-size:9px;width:100%}
+.video-link{display:inline-block;color:var(--muted);text-underline-offset:3px}
+.profile-back{font-size:9px;line-height:1.8;text-underline-offset:4px}
+.hud .logo{color:inherit;text-decoration:none}
+.profile-back:focus-visible,.hud .logo:focus-visible,.video-link:focus-visible{outline:4px solid var(--gold);outline-offset:3px}

@@ -13,7 +13,6 @@ const HOLD_MS = 3000;          // pose must stay OK this long
 const GRACE_MS = 600;          // short detection drop-outs (a lost frame) don't reset the hold
 const TRACK_EVERY_MS = 100;    // ~10 checks per second
 const CHAIN_TARGET = 11;
-const GUIDE_DIR = 'guide/'; // put guide/level-0.jpg ... level-5.jpg (photos or GIFs of the coach's hands)
 
 // MediaPipe labels handedness as if the image were a mirrored selfie.
 // Our preview is NOT mirrored, so a label of "Left" usually means the person's right hand.
@@ -34,6 +33,9 @@ const LEVELS = [
   { name: 'SINGLE CROCHET', sub: 'Bonus stage', coach: true,
     help: 'Bonus! Tusuk ke chain kedua dari hakpen, yarn over, tarik, yarn over, tarik lewat dua loop.' },
 ];
+// The camera-check level offers materials preparation, not a hand-detection demo.
+const VIDEO_LESSONS = [0, 2, 1, 3, 4, 5];
+let videoLevel = null;
 
 const $ = (id) => document.getElementById(id);
 const el = (tag, cls, text) => { const n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; };
@@ -298,14 +300,13 @@ function renderLevels() {
   renderChains();
 }
 
+
 function showGuide(level) {
-  const img = $('guideImg'); const ph = $('guidePlaceholder');
-  ph.textContent = `[FOTO CONTOH] ${LEVELS[level].name}`;
-  ph.hidden = false; img.hidden = true;
-  img.onload = () => { img.hidden = false; ph.hidden = true; };
-  img.onerror = () => { img.hidden = true; ph.hidden = false; };
-  img.alt = `Contoh tangan coach: ${LEVELS[level].name}`;
-  img.src = `${GUIDE_DIR}level-${level}.jpg`;
+  $('workshopVideoUnavailable').hidden = level !== 0;
+  $('workshopVideoControls').hidden = false;
+  if (videoLevel === level) return;
+  window.CourseVideo.openLesson(VIDEO_LESSONS[level]);
+  videoLevel = level;
 }
 
 function renderChains() {
@@ -315,6 +316,7 @@ function renderChains() {
 }
 
 function levelUp() {
+  window.CourseVideo.pause();
   const cleared = LEVELS[player.level];
   journal('Workshop: level CLEAR', `${player.name || 'Player'} · ${cleared.name}`);
   player.level += 1; savePlayer();
@@ -326,6 +328,7 @@ function levelUp() {
 
 // ---------- journal ----------
 function showJournal() {
+  window.CourseVideo.pause();
   const s = courseState();
   $('journalPlayer').textContent = player.name || 'PLAYER';
   $('statLevels').textContent = `${Math.min(player.level, LEVELS.length)} / ${LEVELS.length}`;
@@ -357,6 +360,7 @@ function showGame() {
 }
 
 function init() {
+  window.CourseVideo.init();
   for (let i = 0; i < 5; i++) $('holdBar').append(document.createElement('i'));
   $('playerName').value = player.name || '';
   document.querySelector(`input[name=hand][value=${player.hand === 'left' ? 'left' : 'right'}]`).checked = true;
