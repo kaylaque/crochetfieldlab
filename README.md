@@ -1,8 +1,8 @@
 # Crochet Field Lab 🧶
 
-A browser-based beginner crochet course with guided steps, an illustrative 3D-coordinate stitch view, an on-device camera, optional hand landmarks, manual stitch tracking, and local progress. This repository is the working prototype for that idea — not a finished computer-vision tutor.
+Crochet Field Lab is a beginner-friendly crochet and coding experiment by PyLadies Yogyakarta. The home page introduces the project; `workshop.html` is the interactive crochet.py workshop with camera-assisted hand positioning, tutorial playback and manual chain counting.
 
-The prototype covers the first learning loop: follow a step, watch the stitch motion, practice in front of the camera, count your stitches, and keep your place. Automatic stitch recognition and AI correctness feedback remain research work.
+The earlier self-guided course remains available at `course.html`. Neither experience automatically verifies crochet stitches.
 
 ## Quick start
 
@@ -15,17 +15,17 @@ python3 -m http.server 8000
 npm test
 ```
 
-Open `http://localhost:8000/`. For camera access from a phone, deploy over HTTPS first; a plain `http://<LAN-IP>` page may be refused by the browser.
+Open `http://localhost:8000/` for the project profile, then choose **Mulai workshop**. The earlier self-guided course is at `http://localhost:8000/course.html`. For camera access from a phone, deploy over HTTPS first; a plain `http://<LAN-IP>` page may be refused by the browser.
 
 ## What works today
 
-- **Guided course:** eight steps from tools and slip knot through foundation chain, single crochet, rows, and fastening off.
-- **Illustrative stitch view:** rotatable and zoomable canvas scenes drawn from 3D coordinates. Lessons 2, 4, and 5 play a lesson-local stitch timeline with play/pause, a scrubber, previous/next phase buttons, 0.25×/0.5×/1× speed, front/top/side/free angle presets, and a right/left-handed mirror; the knot lesson has five named phases and the chain lessons four, each settling on its end pose before the next. The other five lessons stay explanatory static scenes and show no playback controls. These are explanatory illustrations, not physically accurate crochet simulations or models generated from camera input.
+- **Workshop:** six levels retain the camera, hand-position checks, three-second hold, coach confirmation, Python rules editor and manual chain counter. The first level checks camera framing and offers a materials video; the remaining levels show the corresponding tutorial segment in **Tiru Tangan Ini**.
+- **Tutorial video:** select **Muat video** to contact YouTube and load its player; no YouTube resources are requested before that choice. Use YouTube controls for play, pause, speed and seeking, and the lesson controls for phases and restart. Positions are saved separately by lesson. The direct timestamped link remains available if the player fails. Segment bounds are checked every 250 ms during playback, not enforced sample-accurately.
 - **Camera practice:** on-device preview with front/back switch, plus an opt-in MediaPipe Hand Landmarker overlay that reports whether hands are in frame. Model and WebAssembly assets load from an external CDN only when enabled.
 - **Manual tracking:** foundation-chain and single-crochet counters, undo, row number and next-row control, lesson check-offs, self-check and tips, and an activity journal.
-- **Persistence:** pause, resume, and automatic `localStorage` saves in the same browser profile. No cross-device sync.
+- **Persistence:** workshop progress, course progress and each lesson's video position are saved locally in the same browser profile. A new page requires loading the video again and starts paused. Playback does not count stitches or complete lessons. Resetting the self-guided course clears video positions; resetting workshop levels keeps chain counts and video positions. No cross-device sync.
 - **Agent tools:** eight optional WebMCP tools over the same lesson actions. See [Optional WebMCP tools](#optional-webmcp-tools).
-- **Responsive UI:** phone layout, keyboard rotation for the stitch view, reduced-motion handling, and chapter links to the source tutorial.
+- **Responsive UI:** phone layout, keyboard-accessible phase controls, reduced-motion handling, and chapter links to the source tutorial.
 
 No automatic stitch counting, stitch-correctness detection, hook position detection, or yarn tracking exists.
 
@@ -33,7 +33,7 @@ No automatic stitch counting, stitch-correctness detection, hook position detect
 
 The long-term product is a crochet companion that helps a beginner learn independently:
 
-- **Learn** fundamental techniques from step-by-step animated guidance.
+- **Learn** fundamental techniques from step-by-step guidance.
 - **Practice** with a camera that observes real hand and hook movement.
 - **Get feedback** on stitch sequences, mistakes, and corrections.
 - **Track** stitches, rows, completed steps, and project history.
@@ -68,7 +68,7 @@ flowchart LR
 
 | Technology | Purpose | In prototype |
 |---|---|---|
-| Three.js / WebGL | Interactive 3D crochet visualization | No — Canvas 2D projection of 3D coordinates |
+| Video embed | Real-hand tutorial and native playback | Yes — opt-in YouTube player |
 | MediaPipe Hands | Hand landmark tracking | Yes — optional, framing only |
 | Object detection / segmentation | Identify hook, yarn, and loops | No |
 | Temporal action recognition | Identify movements and completed stitches | No |
@@ -84,7 +84,7 @@ See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for the current runtime and t
 
 | Phase | Focus | Prototype status |
 |---|---|---|
-| **P0 — Fundamental course** | Illustrations, beginner instructions, navigation, mobile UX | Started — eight steps and responsive UI |
+| **P0 — Fundamental course** | Tutorial, beginner instructions, navigation, mobile UX | Started — eight steps and responsive UI |
 | **P1 — Progress tracking** | Counting, undo, checkpoints, pause/resume | Started — manual counts, rows, pause/resume, journal |
 | **P2 — Computer vision** | Calibration, hand tracking, hook/yarn detection | Partial — camera preview and optional hand landmarks |
 | **P3 — Stitch recognition** | Temporal recognition, automatic counting, error detection | Not started |
@@ -93,7 +93,7 @@ See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for the current runtime and t
 
 MVP scope:
 
-1. **Deliver the beginner course:** functional guidance, camera preview, and persistent progress. The current prototype covers this with illustrative rather than physically accurate 3D.
+1. **Deliver the beginner course:** functional guidance, camera preview, and persistent progress. The current prototype includes an opt-in real-hand tutorial.
 2. **Run one bounded CV experiment:** recognize foundation-chain movements and measure stitch-count accuracy across users, camera angles, and yarn types.
 3. **Keep the manual path primary** until recognition meets the evaluation bar above.
 
@@ -103,7 +103,7 @@ Detailed phases and exit criteria: [`docs/ROADMAP.md`](docs/ROADMAP.md).
 
 | Order | Work | Done when |
 |---|---|---|
-| 1 | Make the stitch studio more precise and controllable | Lessons 2, 4, 5 have named phases with a scrubber, phase steps, speed, angle presets, and a handedness mirror; chain counts 0–11 draw exactly that many Vs and above 11 draw the last 11 plus `Last 11 of N counted`; the remaining five illustrated lessons stay static and expose no playback |
+| 1 | Improve the lesson tutorial experience | Keep chapter and phase mappings aligned with the source tutorial |
 | 2 | Add a camera **setup** guide, not a correctness judge | Step-specific framing, angle, distance, and lighting hints work on phone and laptop without nagging |
 | 3 | Prototype foundation-chain tracking | A phase-aware model proposes a count with confidence; the learner confirms, corrects, or ignores it |
 | 4 | Prove efficiency and precision | Measured count error, false corrections, override rate, latency, and device performance meet the gates in the roadmap |
@@ -116,10 +116,8 @@ The sequencing is deliberate: reliable framing and labeled motion data come befo
 Camera (getUserMedia) ───────► video panel
               └─ opt-in hand landmarker (MediaPipe) ► hand landmark overlay
 
-Lesson manifest ─────► chapter-linked tutorial + illustrative stitch viewport
-          └──────► next actions + manual self-check
-Playhead + speed + angle + handedness + manual count
-          └──────► stitch-motion.js pose sampling ─────► stitch-renderer.js ─────► Canvas 2D
+Lesson manifest ─────► written instruction + manual self-check
+          └──────► opt-in YouTube player + lesson-specific video position
 Manual counter ─────► localStorage ◄──── lesson navigation / pause
                                 └──────► history + resume
 
@@ -128,18 +126,17 @@ Browser agent ─────► document.modelContext ► webmcp.js ──► s
 
 ## Files
 
-- `index.html` — semantic layout
-- `styles.css` — design tokens and responsive UI; Google Fonts are optional
-- `app.js` — lesson content, progress, canvas stitch renderer, camera, optional hand landmarks
-- `stitch-motion.js` — keyframed knot and chain poses with pure sampling and mirroring (`window.StitchMotion`)
-- `stitch-renderer.js` — depth-ordered strand, hook, completed-V, and badge drawing into a 2D context (`window.StitchRenderer`)
+- `index.html` and `profile.css` — project and PyLadies Yogyakarta profile
+- `workshop.html`, `workshop.css`, `workshop.js` — workshop flow, hand detection, guide and journal
+- `course.html` and `styles.css` — earlier self-guided course
+- `app.js` — lesson content, progress, camera, optional hand landmarks
+- `course-video.js` — consent-gated YouTube player, verified lesson segments and separate video positions
 - `webmcp.js` — optional WebMCP tool definitions built on the same app actions
 - `vendor/webmcp-polyfill.js` — vendored W3C WebMCP polyfill 0.1.0 (Apache-2.0; license beside it)
 - `scripts/build-static.mjs` — copies browser assets into `dist/` for Workers
 - `wrangler.toml` — Cloudflare Workers static-assets configuration
-- `tests/test-smoke.cjs` — Node smoke test for navigation, counts, persistence, playback, and journal
-- `tests/test-motion.cjs` — Node test for phase labels, interpolation, continuity, and mirroring
-- `tests/test-renderer.cjs` — Node test for drawn strands, completed Vs, overflow label, and in-buffer geometry
+- `tests/test-smoke.cjs` — Node smoke test for navigation, counts, persistence, pause/resume, and journal
+- `tests/test-course-video.cjs` — deterministic video lifecycle, positions, phase and failure checks
 - `docs/SPEC.md` — product concept, goals, core features, roadmap, and MVP scope
 - `docs/ARCHITECTURE.md` — current runtime and proposed computer-vision extension
 - `docs/ROADMAP.md` — phased roadmap with prototype status
@@ -169,7 +166,7 @@ The vendored polyfill is the package's standalone `dist/polyfill.js`. Replace th
 
 ## Deploy to Cloudflare Workers
 
-The site deploys as a static-assets-only Worker. `npm run build` copies `index.html`, `styles.css`, `app.js`, `stitch-motion.js`, `stitch-renderer.js`, `webmcp.js`, and `vendor/` into `dist/`; `wrangler.toml` serves that directory.
+The site deploys as a static-assets-only Worker. `npm run build` copies the profile, workshop, course, player, vendor scripts and workshop assets into `dist/`; `wrangler.toml` serves that directory.
 
 One-time local setup:
 
@@ -231,4 +228,4 @@ These links are references, not assets. This prototype is an original implementa
 - Progress is stored only in `localStorage` and is subject to browser storage policies, deletion, private browsing, and device changes.
 - The WebMCP tools expose lesson progress, stitch counts, and journal entries to the agent the browser provides. They do not expose video, camera controls, or `getUserMedia`, and they make no network requests.
 - A learner can mark a lesson complete without mastering it; the interface does not present an unsupported automatic correctness score.
-- The stitch visuals are original procedural illustrations, not a copy of CrochetPARADE or the linked design references.
+- The tutorial is embedded from the original video and is not copied or rehosted.

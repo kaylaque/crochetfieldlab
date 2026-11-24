@@ -7,7 +7,7 @@
   "scripts": {
     "build": "node scripts/build-static.mjs",
     "preview": "python3 -m http.server 8000",
-    "test": "node tests/test-smoke.cjs",
+    "test": "node tests/test-smoke.cjs && node tests/test-course-video.cjs && node tests/test-workshop-video.cjs",
     "dev": "wrangler dev",
     "deploy": "npm run build && wrangler deploy",
     "deploy:dry": "npm run build && wrangler deploy --dry-run"

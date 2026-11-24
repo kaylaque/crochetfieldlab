@@ -1,0 +1,147 @@
+/* crochet.py workshop mode: pixel-arcade theme, pink. Separate from the main course styles. */
+:root{
+  --ink:#2A0A1E; --sky:#FFD6E8; --paper:#FFF0F6; --white:#FFFFFF;
+  --accent:#E0307A; --accent-soft:#FF8FC0; --gold:#FFC23D;
+  --brick:#D93A78; --mortar:#7A1640; --ok:#2F7A3A; --bad:#B01E4E; --muted:#5A1A38;
+  --font:'Press Start 2P', ui-monospace, monospace;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--sky);color:var(--ink);font-family:var(--font);font-size:12px;line-height:1.8}
+[hidden]{display:none!important}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+h1,h2,p{margin:0}
+h2{font-size:12px}
+.accent{color:var(--accent)} .accent-soft{color:var(--accent-soft)}
+.hint{font-size:9px;line-height:2;color:var(--muted)} .hint.dark{color:var(--ink)}
+.blink{animation:blink 1s steps(2) infinite}
+@keyframes blink{50%{opacity:.25}}
+@media (prefers-reduced-motion: reduce){.blink,.snake,.tongue,.pop{animation:none!important}}
+
+.screen{min-height:100vh;display:flex;flex-direction:column}
+.bricks{height:72px;border-top:6px solid var(--ink);background-color:var(--brick);
+  background-image:linear-gradient(var(--mortar) 3px,transparent 3px),linear-gradient(90deg,var(--mortar) 3px,transparent 3px);
+  background-size:48px 24px}
+.card{background:var(--white);border:4px solid var(--ink);box-shadow:6px 6px 0 var(--ink);padding:16px;display:flex;flex-direction:column;gap:12px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+
+.btn{font-family:var(--font);font-size:11px;min-height:44px;padding:0 16px;border:4px solid var(--ink);box-shadow:4px 4px 0 var(--ink);cursor:pointer;color:var(--ink);text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:8px}
+.btn:active{transform:translate(2px,2px);box-shadow:2px 2px 0 var(--ink)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn:focus-visible,input:focus-visible,textarea:focus-visible{outline:4px solid var(--gold);outline-offset:2px}
+.btn-gold{background:var(--gold)} .btn-light{background:var(--paper)} .btn-accent{background:var(--accent);color:var(--white)}
+.btn.big{min-height:60px;font-size:16px} .btn.small{min-height:44px;font-size:10px;border-color:var(--paper);box-shadow:none}
+
+/* Welcome */
+.welcome-inner{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:28px;padding:48px 20px;text-align:center}
+.kicker{font-size:12px;color:var(--mortar)}
+.title-row{display:flex;align-items:flex-end;gap:20px;flex-wrap:wrap;justify-content:center}
+.title-row h1{font-size:clamp(36px,7vw,72px);line-height:1.2;text-shadow:6px 6px 0 var(--white)}
+.lead{max-width:760px;font-size:13px;line-height:2}
+.start-card{width:100%;max-width:560px;text-align:left;gap:16px;padding:24px;border-width:6px;box-shadow:8px 8px 0 var(--ink)}
+.start-card input[type=text]{min-height:52px;padding:0 14px;font-family:var(--font);font-size:14px;background:var(--paper);border:4px solid var(--ink);color:var(--ink)}
+fieldset{margin:0;padding:0;border:0;display:flex;gap:12px;flex-wrap:wrap}
+legend{margin-bottom:12px;font-size:10px}
+.choice{flex:1;min-height:44px;display:flex;align-items:center;gap:10px;padding:0 12px;font-size:10px;border:4px solid var(--ink);background:var(--paper);cursor:pointer}
+.choice:has(input:checked){background:var(--accent);color:var(--white)}
+
+.snake-box{width:132px;height:84px;overflow:hidden;flex:none}
+.snake{display:block;animation:rise 3s steps(1,end) infinite}
+@keyframes rise{0%{transform:translateY(100%)}8%{transform:translateY(66%)}16%{transform:translateY(33%)}24%,72%{transform:translateY(0)}80%{transform:translateY(33%)}88%{transform:translateY(66%)}96%,100%{transform:translateY(100%)}}
+.tongue{opacity:0;animation:flick 3s steps(1,end) infinite}
+@keyframes flick{0%,30%{opacity:0}34%{opacity:1}42%{opacity:0}48%{opacity:1}56%{opacity:0}62%{opacity:1}68%,100%{opacity:0}}
+
+/* HUD */
+.hud{display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap;padding:18px 32px;background:var(--ink);color:var(--paper);font-size:13px}
+.hud-item{display:flex;flex-direction:column;gap:4px}
+.hud-label{color:var(--accent-soft);font-size:10px}
+.hud-right{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.logo{font-size:18px}
+
+/* Game grid */
+.game-grid{flex:1;display:grid;grid-template-columns:minmax(200px,250px) minmax(0,1fr) minmax(240px,300px);gap:24px;padding:24px 32px;align-items:start}
+.level-map{display:flex;flex-direction:column;gap:10px}
+.level-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
+.level{display:flex;gap:10px;align-items:center;padding:8px 10px;border:4px solid var(--ink);background:var(--paper);box-shadow:5px 5px 0 var(--ink);font-size:9px;line-height:1.6}
+.level .num{width:30px;height:30px;flex:none;border:4px solid var(--ink);background:var(--gold);display:flex;align-items:center;justify-content:center;font-size:11px}
+.level .txt{display:flex;flex-direction:column;gap:4px}
+.level.clear .state{color:var(--ok)}
+.level.now{background:var(--accent);color:var(--white)} .level.now .num{background:var(--white)}
+.level.lock{background:#E9D6DF;color:#5A3A4A;border-style:dashed;box-shadow:none} .level.lock .num{background:#CDB5C1}
+
+.stage{display:flex;flex-direction:column;gap:18px;min-width:0}
+.camera-box{position:relative;width:100%;aspect-ratio:16/9;background:#3B2433;border:6px solid var(--ink);box-shadow:8px 8px 0 var(--ink);overflow:hidden}
+#cameraVideo,#handOverlay{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+#handOverlay{pointer-events:none}
+.camera-box.flipped #cameraVideo,.camera-box.flipped #handOverlay{transform:scaleX(-1)}
+.camera-placeholder{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;color:var(--paper)}
+.pill{position:absolute;padding:8px 10px;font-family:var(--font);font-size:10px;border:0}
+.pill-live{top:12px;left:12px;background:#FF3B7F;color:var(--white)}
+.pill-flip{top:12px;right:12px;background:var(--paper);color:var(--ink);cursor:pointer;min-height:36px}
+.pill-flip[aria-pressed=true]{background:var(--gold)}
+.pill-metric{bottom:12px;left:12px;background:var(--ink);color:var(--gold)}
+.toast{position:absolute;top:58px;left:50%;transform:translateX(-50%);padding:10px 14px;background:var(--gold);border:4px solid var(--ink);font-size:11px;white-space:nowrap}
+
+.status{font-size:13px;line-height:1.7}
+.status.ok{color:var(--ok)} .status.bad{color:var(--bad)}
+.hold-row{display:flex;align-items:center;gap:14px;flex-wrap:wrap;font-size:10px}
+.hold-bar{display:flex;gap:6px}
+.hold-bar i{width:34px;height:22px;border:3px solid var(--ink);background:#F3E3EA}
+.hold-bar i.on{background:var(--accent)}
+
+.side{display:flex;flex-direction:column;gap:18px}
+.code{width:100%;min-height:200px;padding:12px;background:var(--ink);color:var(--sky);border:0;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;line-height:1.5;resize:vertical;tab-size:4}
+.code{min-height:0}
+textarea.code{min-height:150px}
+.full-code summary{cursor:pointer;font-size:9px;min-height:44px;display:flex;align-items:center}
+.full-code pre{margin:0;max-height:260px;overflow:auto;white-space:pre;font-size:10px}
+.big-number{min-width:60px;text-align:center;font-size:20px}
+.coach{margin-left:auto;min-height:48px;font-size:11px}
+.rule-card{gap:8px;background:var(--paper)}
+.rule-line{font-size:10px;line-height:1.8}
+.rule-line .tag-ok{color:var(--ok)} .rule-line .tag-bad{color:var(--bad)}
+.guide{margin:0;gap:8px}
+.guide figcaption{font-size:10px}
+.guide-frame{height:170px;background:#F3E3EA;border:3px dashed var(--mortar);display:flex;align-items:center;justify-content:center;overflow:hidden}
+.guide-frame img{width:100%;height:100%;object-fit:cover}
+.guide-placeholder{font-size:8px;line-height:1.8;text-align:center;padding:8px;color:var(--muted)}
+.ok-text{color:var(--ok)}
+
+/* Journal */
+.journal-main{flex:1;width:100%;max-width:1000px;margin:0 auto;padding:36px 24px;display:flex;flex-direction:column;gap:22px}
+.journal-main h1{font-size:clamp(24px,4vw,40px);text-shadow:4px 4px 0 var(--white)}
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:18px}
+.stat{gap:10px}
+.hud-label.dark{color:var(--mortar)}
+.stat-num{font-size:24px} .stat-num.small-num{font-size:12px;line-height:1.8}
+.log{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px;max-height:320px;overflow:auto;font-size:9px;line-height:1.8}
+.log li{display:flex;justify-content:space-between;gap:12px;padding:8px 10px;background:var(--paper);border:3px solid var(--ink)}
+.log time{color:var(--muted);flex:none}
+.log .empty{justify-content:center;color:var(--muted)}
+
+/* Level up */
+.levelup{position:fixed;inset:0;background:var(--ink);color:var(--paper);display:flex;align-items:center;justify-content:center;z-index:10;padding:24px}
+.levelup-inner{display:flex;flex-direction:column;align-items:center;gap:30px;text-align:center}
+.levelup h2{font-size:clamp(40px,8vw,88px);line-height:1.2;color:var(--accent-soft);text-shadow:8px 8px 0 var(--paper)}
+.levelup p{font-size:18px}
+.levelup-next{color:var(--ink);font-size:14px;line-height:1.9;border-color:var(--accent);box-shadow:8px 8px 0 var(--accent)}
+.pop{animation:pop .8s steps(4) infinite alternate}
+@keyframes pop{to{transform:scale(1.06)}}
+
+@media (max-width: 1000px){
+  .game-grid{grid-template-columns:1fr;padding:18px}
+  .level-list{flex-direction:row;overflow-x:auto;padding-bottom:8px}
+  .level{min-width:190px}
+}
+
+/* Tutorial uses the same opt-in player as the course, inside the coach guide. */
+#workshopVideoControls{min-width:0}
+.guide-video:not(:empty){width:100%;aspect-ratio:16/9;min-height:200px;background:#3b2433;border:3px solid var(--ink);overflow:hidden}
+.guide-video iframe{display:block;width:100%;height:100%;border:0}
+#workshopVideoControls .hint{margin:10px 0;overflow-wrap:anywhere}
+.video-controls{display:flex;flex-wrap:wrap;gap:8px}
+.video-controls .btn{flex:1 1 auto;padding:8px;font-size:8px}
+.video-load{font-size:9px;width:100%}
+.video-link{display:inline-block;color:var(--muted);text-underline-offset:3px}
+.profile-back{font-size:9px;line-height:1.8;text-underline-offset:4px}
+.hud .logo{color:inherit;text-decoration:none}
+.profile-back:focus-visible,.hud .logo:focus-visible,.video-link:focus-visible{outline:4px solid var(--gold);outline-offset:3px}

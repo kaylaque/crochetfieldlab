@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>crochet.py — Workshop Mode</title>
+  <meta name="description" content="crochet.py: workshop rajut hakpen + computer vision. Kamera membaca 21 titik tangan, aturannya ditulis di Python." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="workshop.css" />
+</head>
+<body>
+  <!-- WELCOME -->
+  <section id="welcomeScreen" class="screen welcome" aria-labelledby="welcomeTitle">
+    <div class="welcome-inner">
+      <a class="profile-back" href="index.html">← PROFIL CROCHET FIELD LAB</a>
+      <p class="kicker">PYTHON JOGJA · WORKSHOP</p>
+      <div class="title-row">
+        <h1 id="welcomeTitle">crochet<span class="accent">.py</span></h1>
+        <div class="snake-box" aria-hidden="true">
+          <svg class="snake" width="132" height="84" viewBox="0 0 22 14" shape-rendering="crispEdges">
+            <path d="M1 10h2v2H1zM3 8h2v4H3zM5 10h2v2H5zM7 8h2v4H7zM9 10h2v2H9zM11 8h2v4h-2zM13 6h2v4h-2zM14 3h4v5h-4z" fill="#2FA84F"></path>
+            <path d="M3 8h2v1H3zM7 8h2v1H7zM11 8h2v1h-2zM14 3h4v1h-4z" fill="#7FE08F"></path>
+            <rect x="16" y="4" width="1" height="1" fill="#2A0A1E"></rect>
+            <path class="tongue" d="M18 6h2v1h-2zM20 5h1v1h-1zM20 7h1v1h-1z" fill="#E0307A"></path>
+          </svg>
+        </div>
+      </div>
+      <p class="lead">Rajut pakai hakpen, kamera membaca 21 titik tanganmu. Lewati tiap level untuk naik!</p>
+
+      <form id="startForm" class="card start-card">
+        <label for="playerName">NAMA PLAYER</label>
+        <input id="playerName" type="text" maxlength="12" placeholder="nama panggilan" autocomplete="off" required />
+        <p class="hint">Cukup nama panggilan. Disimpan di browser ini saja, tidak dikirim ke mana pun.</p>
+        <fieldset>
+          <legend>TANGAN UTAMA</legend>
+          <label class="choice"><input type="radio" name="hand" value="right" checked /> KANAN</label>
+          <label class="choice"><input type="radio" name="hand" value="left" /> KIRI</label>
+        </fieldset>
+        <button type="submit" class="btn btn-gold big"><span class="blink">▶</span> START</button>
+        <p class="hint">Kamera hanya diproses di laptopmu. Tidak ada video yang direkam atau diunggah.</p>
+      </form>
+    </div>
+    <div class="bricks" aria-hidden="true"></div>
+  </section>
+
+  <!-- GAME -->
+  <section id="gameScreen" class="screen game" hidden aria-label="Layar workshop">
+    <header class="hud">
+      <div class="hud-item"><span class="hud-label">PLAYER</span><span id="hudPlayer">-</span></div>
+      <div class="hud-item"><span class="hud-label">LEVEL</span><span id="hudLevel">0</span></div>
+      <div class="hud-item"><span class="hud-label">CHAIN</span><span id="hudChains">0 / 11</span></div>
+      <div class="hud-right">
+        <button id="journalButton" type="button" class="btn btn-gold small">MY JOURNAL</button>
+        <a class="logo" href="index.html" aria-label="Kembali ke profil Crochet Field Lab">crochet<span class="accent-soft">.py</span></a>
+      </div>
+    </header>
+
+    <main class="game-grid">
+      <nav class="level-map" aria-label="Peta level">
+        <h2>PETA LEVEL</h2>
+        <ol id="levelList" class="level-list"></ol>
+        <p class="hint">Level baru terbuka kalau level sebelumnya CLEAR.</p>
+      </nav>
+
+      <section class="stage" aria-label="Kamera latihan">
+        <div id="cameraBox" class="camera-box">
+          <video id="cameraVideo" autoplay muted playsinline></video>
+          <canvas id="handOverlay" aria-hidden="true"></canvas>
+          <div id="cameraPlaceholder" class="camera-placeholder">
+            <p>KAMERA MATI</p>
+            <button id="cameraButton" type="button" class="btn btn-gold">▶ NYALAKAN KAMERA</button>
+          </div>
+          <span id="livePill" class="pill pill-live blink" hidden>● LIVE</span>
+          <button id="flipButton" type="button" class="pill pill-flip" aria-pressed="false">⇋ FLIP</button>
+          <span id="toast" class="toast" hidden></span>
+          <span id="metricPill" class="pill pill-metric" hidden></span>
+        </div>
+
+        <div class="card status-card">
+          <p id="statusText" class="status" aria-live="polite">Nyalakan kamera untuk mulai.</p>
+          <div class="hold-row">
+            <span>TAHAN 3 DETIK</span>
+            <div id="holdBar" class="hold-bar" role="progressbar" aria-valuemin="0" aria-valuemax="5" aria-valuenow="0" aria-label="Progress tahan posisi"></div>
+            <button id="coachButton" type="button" class="btn btn-accent coach" disabled>COACH OK ✓</button>
+          </div>
+          <p id="coachHint" class="hint">Tahan posisi 3 detik dulu, lalu panggil coach.</p>
+          <p id="engineStatus" class="hint">Memuat Python…</p>
+        </div>
+      </section>
+
+      <aside class="side" aria-label="Aturan dan coach">
+        <div class="card rule-card">
+          <h2>ATURAN AKTIF</h2>
+          <p id="activeRule" class="rule-line">Menunggu kamera…</p>
+        </div>
+
+        <section class="card guide" aria-labelledby="guideTitle">
+          <h2 id="guideTitle">TIRU TANGAN INI:</h2>
+          <p id="workshopVideoUnavailable" class="hint dark">Video ini mengenalkan perlengkapan. Level pertama tetap untuk mengecek kamera dan kedua tangan.</p>
+          <div id="workshopVideoControls" hidden>
+            <div id="videoPlayerHost" class="guide-video"></div>
+            <p class="hint dark">Memuat video akan menghubungkan perangkat ke YouTube.</p>
+            <button id="videoLoad" type="button" class="btn btn-gold video-load">MUAT VIDEO</button>
+            <p id="videoStatus" class="hint dark" role="status" aria-live="polite"></p>
+            <p id="videoPhase" class="hint dark" aria-live="polite"></p>
+            <div class="video-controls">
+              <button id="videoPreviousPhase" type="button" class="btn btn-light" disabled>‹ FASE</button>
+              <button id="videoNextPhase" type="button" class="btn btn-light" disabled>FASE ›</button>
+              <button id="videoRestart" type="button" class="btn btn-light" disabled>ULANGI</button>
+            </div>
+            <a id="videoTutorialLink" class="hint video-link" href="https://www.youtube.com/watch?v=aAxGTnVNJiE" target="_blank" rel="noopener noreferrer">BUKA DI YOUTUBE ↗</a>
+          </div>
+          <p id="levelHelp" class="hint ok-text"></p>
+        </section>
+        <div class="card">
+          <h2>OPREK rules.py</h2>
+          <label for="rulesEditor" class="hint dark">Ubah angkanya, lalu RUN:</label>
+          <textarea id="rulesEditor" class="code" spellcheck="false" rows="7"></textarea>
+          <div class="row">
+            <button id="runButton" type="button" class="btn btn-gold">▶ RUN</button>
+            <button id="resetRulesButton" type="button" class="btn btn-light">RESET</button>
+          </div>
+          <p id="rulesMessage" class="hint" aria-live="polite">Nggak wajib di-RUN. Aturan bawaan sudah jalan.</p>
+          <details class="full-code">
+            <summary>LIHAT KODE LENGKAP</summary>
+            <pre id="rulesFull" class="code"></pre>
+          </details>
+        </div>
+
+        <div id="chainCard" class="card" hidden>
+          <h2>HITUNG CHAIN</h2>
+          <div class="row">
+            <button id="chainMinus" type="button" class="btn btn-light" aria-label="Kurangi satu chain">−1</button>
+            <span id="chainCount" class="big-number">0</span>
+            <button id="chainPlus" type="button" class="btn btn-gold" aria-label="Tambah satu chain">+1</button>
+          </div>
+        </div>
+
+      </aside>
+    </main>
+    <div class="bricks" aria-hidden="true"></div>
+  </section>
+
+
+  <!-- MY JOURNAL -->
+  <section id="journalScreen" class="screen journal" hidden aria-labelledby="journalTitle">
+    <header class="hud">
+      <div class="hud-item"><span class="hud-label">PLAYER</span><span id="journalPlayer">-</span></div>
+      <a class="logo" href="index.html" aria-label="Kembali ke profil Crochet Field Lab">crochet<span class="accent-soft">.py</span></a>
+    </header>
+    <main class="journal-main">
+      <h1 id="journalTitle">MY JOURNAL</h1>
+      <p class="hint dark">Progresmu tersimpan di browser ini saja.</p>
+      <div class="stat-grid">
+        <div class="card stat"><span class="hud-label dark">LEVEL CLEAR</span><span id="statLevels" class="stat-num">0 / 6</span></div>
+        <div class="card stat"><span class="hud-label dark">CHAIN</span><span id="statChains" class="stat-num">0</span></div>
+        <div class="card stat"><span class="hud-label dark">LEVEL SEKARANG</span><span id="statNow" class="stat-num small-num">-</span></div>
+      </div>
+      <div class="card">
+        <h2>ACTIVITY LOG</h2>
+        <ol id="journalLog" class="log"></ol>
+      </div>
+      <div class="row">
+        <button id="journalBack" type="button" class="btn btn-gold big">◀ LANJUT MAIN</button>
+        <button id="journalReset" type="button" class="btn btn-light">RESET PROGRES WORKSHOP</button>
+      </div>
+    </main>
+    <div class="bricks" aria-hidden="true"></div>
+  </section>
+
+  <!-- LEVEL UP -->
+  <div id="levelUp" class="levelup" hidden role="dialog" aria-modal="true" aria-labelledby="levelUpTitle">
+    <div class="levelup-inner">
+      <h2 id="levelUpTitle" class="pop">LEVEL UP!</h2>
+      <p id="levelUpCleared"></p>
+      <div class="card levelup-next">LEVEL BARU TERBUKA:<br /><span id="levelUpNext" class="accent"></span></div>
+      <button id="levelUpButton" type="button" class="btn btn-gold big">LANJUT ▶</button>
+    </div>
+  </div>
+
+  <script src="course-video.js"></script>
+  <script src="workshop.js" type="module"></script>
+</body>
+</html>
